@@ -16,8 +16,8 @@ signal state_changed(state_name: StringName)
 @export var air_decel := 200.0
 
 @export_group("Jump")
-@export var jump_velocity := 260.0
-@export var jump_cut := 0.4             # velocity.y *= this on early release
+@export var jump_velocity := 320.0
+@export var jump_cut := 0.45            # velocity.y *= this on early release
 @export var gravity := 900.0
 @export var fall_gravity_multiplier := 1.4   # fall faster than rise = weighty
 @export var max_fall_speed := 320.0

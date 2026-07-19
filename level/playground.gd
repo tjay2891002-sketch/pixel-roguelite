@@ -22,17 +22,19 @@ const GEOMETRY := [
 	# --- steps up (24px each)
 	[Rect2(700, 126, 48, 24), FLOOR_COLOR],
 	[Rect2(772, 102, 48, 24), FLOOR_COLOR],
-	# --- wall-jump shaft: interior 40px wide; left wall stops at y=80 so the
-	#     floor-level opening on the left is the ENTRANCE
+	# --- wall-jump shaft: interior 40px wide; left wall is lower (spans
+	#     y=-20..110) so you can walk in under it AND cling to it from a
+	#     floor jump; right wall runs full height
 	[Rect2(840, 150, 210, 60), FLOOR_COLOR],
-	[Rect2(880, -50, 16, 130), WALL_COLOR],
+	[Rect2(880, -20, 16, 130), WALL_COLOR],
 	[Rect2(936, -50, 16, 200), WALL_COLOR],
 	# --- shaft exit platform (32px above wall tops)
 	[Rect2(968, -82, 120, 16), FLOOR_COLOR],
 	# --- main floor resumes
 	[Rect2(1050, 150, 398, 60), FLOOR_COLOR],
-	# --- ledge block: top 90px above floor — needs a ledge grab to mantle
-	[Rect2(1160, 60, 48, 90), BLOCK_COLOR],
+	# --- ledge block: top 130px above floor — out of even double-jump range,
+	#     so the mantle is the only way up
+	[Rect2(1160, 20, 48, 130), BLOCK_COLOR],
 ]
 
 const KILL_ZONE := Rect2(-40, 300, 1520, 40)

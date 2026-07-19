@@ -44,14 +44,15 @@ func _physics_process(_delta: float) -> bool:
 		45:
 			# 1153 puts the 8px rays in contact with the block face (x=1160)
 			# immediately — mimicking a real approach with horizontal speed.
-			_teleport(Vector2(1153, 65)) # beside ledge block (face x=1160, top y=60)
+			# Block top is y=20, so y=25 sits in the grab window.
+			_teleport(Vector2(1153, 25)) # beside ledge block (face x=1160, top y=20)
 			_press(&"move_right")
 		53:
 			_check(_state() == &"LedgeClimb", "fall toward ledge => LedgeClimb", "got %s" % _state())
 		68:
 			_release(&"move_right")
 		70:
-			_check(_player.global_position.y < 60.0, "standing on block top", "y=%s" % _player.global_position.y)
+			_check(_player.global_position.y < 20.0, "standing on block top", "y=%s" % _player.global_position.y)
 		76:
 			# ground_decel from full run takes ~4 frames after input release
 			_check(_state() == &"Idle", "climb finishes => Idle", "got %s" % _state())
