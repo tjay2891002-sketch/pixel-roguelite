@@ -22,9 +22,10 @@ const GEOMETRY := [
 	# --- steps up (24px each)
 	[Rect2(700, 126, 48, 24), FLOOR_COLOR],
 	[Rect2(772, 102, 48, 24), FLOOR_COLOR],
-	# --- wall-jump shaft: interior 40px wide, walls 200 tall
+	# --- wall-jump shaft: interior 40px wide; left wall stops at y=80 so the
+	#     floor-level opening on the left is the ENTRANCE
 	[Rect2(840, 150, 210, 60), FLOOR_COLOR],
-	[Rect2(880, -50, 16, 200), WALL_COLOR],
+	[Rect2(880, -50, 16, 130), WALL_COLOR],
 	[Rect2(936, -50, 16, 200), WALL_COLOR],
 	# --- shaft exit platform (32px above wall tops)
 	[Rect2(968, -82, 120, 16), FLOOR_COLOR],
@@ -35,6 +36,15 @@ const GEOMETRY := [
 ]
 
 const KILL_ZONE := Rect2(-40, 300, 1520, 40)
+
+## [position, text] — floating hints, one per test section.
+const HINTS := [
+	[Vector2(4, 112), "A/D move · Space jump (x2) · Shift roll"],
+	[Vector2(224, 112), "gaps — the wide one needs a double jump"],
+	[Vector2(846, 96), "wall shaft: walk in, hold toward a wall,"],
+	[Vector2(846, 106), "tap jump to climb. exit at the top"],
+	[Vector2(1104, 30), "jump at the block face to ledge-climb"],
+]
 
 var player # untyped on purpose (see state.gd header comment)
 var _camera: Camera2D
@@ -48,6 +58,7 @@ func _ready() -> void:
 	_build_geometry()
 	_build_kill_zone()
 	_build_goal_flag()
+	_build_hints()
 
 	player = $Player
 	player.position = SPAWN
@@ -105,6 +116,16 @@ func _build_kill_zone() -> void:
 	area.add_child(shape)
 	area.body_entered.connect(_on_kill_zone_body_entered)
 	add_child(area)
+
+
+func _build_hints() -> void:
+	for entry in HINTS:
+		var label := Label.new()
+		label.text = entry[1]
+		label.position = entry[0]
+		label.add_theme_font_size_override(&"font_size", 6)
+		label.add_theme_color_override(&"font_color", Color("d7d7d7"))
+		add_child(label)
 
 
 func _build_goal_flag() -> void:

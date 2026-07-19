@@ -25,7 +25,7 @@ func _physics_process(_delta: float) -> bool:
 	match _frame:
 		# --- Phase A: wall cling + wall jump
 		2:
-			_teleport(Vector2(902, 100)) # inside shaft, near left wall (face x=896)
+			_teleport(Vector2(902, 40)) # inside shaft, near left wall (face x=896, wall spans y=-50..80)
 			_press(&"move_left")
 		10:
 			_check(_state() == &"WallCling", "drift into wall => WallCling", "got %s" % _state())
@@ -35,7 +35,7 @@ func _physics_process(_delta: float) -> bool:
 			_release(&"jump")
 		16:
 			_check(_state() == &"WallJump", "jump from cling => WallJump", "got %s" % _state())
-			_check(_player.velocity.x > 100.0, "wall jump pushes away from wall", "velocity.x=%s" % _player.velocity.x)
+			_check(_player.velocity.x > 80.0, "wall jump pushes away from wall", "velocity.x=%s" % _player.velocity.x)
 		17:
 			_release(&"move_left")
 		# --- Phase B: ledge grab + climb

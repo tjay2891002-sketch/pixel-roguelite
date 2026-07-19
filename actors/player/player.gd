@@ -32,8 +32,8 @@ signal state_changed(state_name: StringName)
 
 @export_group("Wall")
 @export var wall_slide_speed := 40.0
-@export var wall_jump_velocity := Vector2(200.0, 240.0)
-@export var wall_jump_lockout := 0.12   # reduced air control right after push-off
+@export var wall_jump_velocity := Vector2(100.0, 250.0)  # gentle push-off: re-grab is quick
+@export var wall_jump_lockout := 0.08   # reduced air control right after push-off
 
 @export_group("Ledge")
 @export var ledge_climb_duration := 0.28
