@@ -9,6 +9,7 @@ extends Node
 
 var player
 var machine
+var actor # generic alias for `player` — enemy states use this name
 
 
 func enter() -> void:

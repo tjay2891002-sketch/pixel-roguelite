@@ -31,6 +31,7 @@ func stage_rng(stage: int) -> RandomNumberGenerator:
 
 
 func _on_player_died() -> void:
-	# M5: death screen -> new run. For now just restart the current scene.
+	# M5: death screen -> new run. For now: brief beat, then reload.
 	SaveStub.flush()
+	await get_tree().create_timer(1.0).timeout
 	get_tree().reload_current_scene()

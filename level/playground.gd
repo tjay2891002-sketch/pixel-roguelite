@@ -39,6 +39,9 @@ const GEOMETRY := [
 
 const KILL_ZONE := Rect2(-40, 300, 1520, 40)
 
+const DUMMY_SCENE := preload("res://actors/enemies/dummy.tscn")
+const WALKER_SCENE := preload("res://actors/enemies/enemy_base.tscn")
+
 ## [position, text] — floating hints, one per test section.
 const HINTS := [
 	[Vector2(4, 112), "A/D move · Space jump (x2) · Shift roll"],
@@ -61,6 +64,7 @@ func _ready() -> void:
 	_build_kill_zone()
 	_build_goal_flag()
 	_build_hints()
+	_spawn_enemies()
 
 	player = $Player
 	player.position = SPAWN
@@ -72,14 +76,25 @@ func _ready() -> void:
 	_camera.limit_right = 1480
 	_camera.limit_bottom = 300
 	_camera.global_position = SPAWN
+	_camera.add_to_group(&"player_camera")
 	add_child(_camera)
+
+
+func _spawn_enemies() -> void:
+	# combat test targets: dummy right after spawn, walker on the final floor
+	var dummy := DUMMY_SCENE.instantiate()
+	dummy.position = Vector2(150, 139)
+	add_child(dummy)
+	var walker := WALKER_SCENE.instantiate()
+	walker.position = Vector2(1250, 139)
+	add_child(walker)
 
 
 func _process(_delta: float) -> void:
 	# Quantized follow camera: whole-pixel steps only, so the pixel-art world
 	# never shimmers sub-pixel (docs/ARCHITECTURE.md §7 camera jitter trap).
 	_camera.global_position = player.global_position.round()
-	_debug_label.text = "state: %s   fps: %d" % [_state_name, Engine.get_frames_per_second()]
+	_debug_label.text = "state: %s   hp: %d   fps: %d" % [_state_name, player.health.hp, Engine.get_frames_per_second()]
 
 
 func _build_geometry() -> void:

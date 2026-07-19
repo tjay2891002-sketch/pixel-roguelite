@@ -1,12 +1,14 @@
 extends CharacterBody2D
-## Player — greybox movement controller (M1, pillar: movement kit).
+## Player — greybox movement + combat controller (M1 movement kit, M2 combat).
 ##
 ## All feel knobs are exports; tune them while running level/playground.tscn.
 ## The flat FSM under $StateMachine reads/writes velocity and the timers here.
-## Shared logic (gravity, steering, facing, jump bookkeeping) lives HERE, not
-## in parent-state classes — docs/ARCHITECTURE.md §2.
+## Shared logic (gravity, steering, facing, jump bookkeeping, hitbox control)
+## lives HERE, not in parent-state classes — docs/ARCHITECTURE.md §2.
 
 signal state_changed(state_name: StringName)
+
+const PlaceholderAnims = preload("res://actors/player/placeholder_anims.gd")
 
 @export_group("Run")
 @export var move_speed := 90.0          # px/s in a 480x270 viewport
@@ -29,6 +31,7 @@ signal state_changed(state_name: StringName)
 @export var roll_speed := 170.0
 @export var roll_duration := 0.32
 @export var roll_cancel_window := 0.10  # last N seconds can cancel into jump/move
+@export var roll_iframe_tail := 0.06    # i-frames outlast the roll by this much
 
 @export_group("Wall")
 @export var wall_slide_speed := 40.0
@@ -42,11 +45,21 @@ signal state_changed(state_name: StringName)
 @export var ledge_climb_duration := 0.28
 @export var ledge_up_offset := 24.0     # fallback climb height if the top probe misses
 
+@export_group("Combat")
+@export var weapon: WeaponData
+
 var facing := 1
-var invulnerable := false               # M2: the Hurtbox will read this for i-frames
+var invulnerable := false               # true during Roll (states/tests read this)
+var iframes_until_msec := 0             # combat i-frames window: roll + tail
 var coyote_timer := 0.0
 var jump_buffer_timer := 0.0
 var air_jumps_left := 0
+
+## Combat scratch state — written by the Attack state, read by animation
+## Call Method tracks (_on_swing_active_start / hitbox_deactivate).
+var attack_step_index := 0
+var current_hit_info: Dictionary = {}
+var current_lunge := 0.0
 
 ## state_machine is untyped on purpose (see state.gd header comment).
 var state_machine
@@ -55,10 +68,18 @@ var state_machine
 @onready var wall_ray: RayCast2D = $WallRay
 @onready var feet_ray: RayCast2D = $FeetRay
 @onready var head_ray: RayCast2D = $HeadRay
+@onready var anim_player: AnimationPlayer = $AnimPlayer
+@onready var hitbox: Area2D = $Hitbox
+@onready var hitbox_shape: CollisionShape2D = $Hitbox/CollisionShape2D
+@onready var health: Node = $Health
 
 
 func _ready() -> void:
 	state_machine = $StateMachine
+	add_to_group(&"player")
+	PlaceholderAnims.build(anim_player)
+	health.poise_broken.connect(_on_poise_broken)
+	health.died.connect(_on_died)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -77,7 +98,15 @@ func _physics_process(delta: float) -> void:
 		air_jumps_left = max_air_jumps
 
 
-# --- Shared helpers -----------------------------------------------------------
+func _process(_delta: float) -> void:
+	# Post-hit grace blink (roll i-frames hide the hurtbox instead).
+	if health.in_grace():
+		visual.modulate.a = 0.35 if (Time.get_ticks_msec() / 70) % 2 == 0 else 0.9
+	else:
+		visual.modulate.a = 1.0
+
+
+# --- Movement helpers ---------------------------------------------------------
 
 func horizontal_input() -> float:
 	return Input.get_axis(&"move_left", &"move_right")
@@ -104,6 +133,7 @@ func set_facing(dir: int) -> void:
 	feet_ray.target_position.x = absf(feet_ray.target_position.x) * facing
 	head_ray.target_position.x = absf(head_ray.target_position.x) * facing
 	visual.scale.x = facing
+	hitbox.position.x = absf(hitbox.position.x) * facing
 
 
 ## Ground/coyote jump. Consumes the buffer only if the jump actually happens.
@@ -149,3 +179,31 @@ func can_ledge_grab() -> bool:
 
 func emit_state(state_name: StringName) -> void:
 	state_changed.emit(state_name)
+
+
+## The combat i-frame window (roll duration + tail). Hurtbox/receive_hit use
+## this rather than the Roll-scoped `invulnerable` flag.
+func has_iframes() -> bool:
+	return Time.get_ticks_msec() < iframes_until_msec
+
+
+# --- Combat -------------------------------------------------------------------
+
+## Called by AnimationPlayer Call Method tracks at active-frame start.
+func _on_swing_active_start() -> void:
+	if is_on_floor():
+		velocity.x = facing * current_lunge
+	hitbox.activate(current_hit_info)
+
+
+## Called by Call Method tracks at active-frame end (and by Attack.exit()).
+func hitbox_deactivate() -> void:
+	hitbox.deactivate()
+
+
+func _on_poise_broken() -> void:
+	state_machine.change_state(&"Hurt")
+
+
+func _on_died() -> void:
+	state_machine.change_state(&"Dead")

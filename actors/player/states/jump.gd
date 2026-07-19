@@ -20,6 +20,9 @@ func physics_update(delta: float) -> void:
 
 	if player.try_air_jump():
 		pass # double jump: impulse applied, stay in Jump
+	elif Input.is_action_just_pressed(&"attack"):
+		player.attack_step_index = 0
+		machine.change_state(&"Attack")
 	elif Input.is_action_just_pressed(&"roll"):
 		machine.change_state(&"Roll")
 	elif player.can_ledge_grab():

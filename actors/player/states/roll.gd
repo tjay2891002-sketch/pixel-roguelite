@@ -9,13 +9,20 @@ var _timer := 0.0
 func enter() -> void:
 	tint("#ce93d8")
 	_timer = player.roll_duration
-	player.invulnerable = true # M2: Hurtbox reads this flag
+	player.invulnerable = true
+	# Combat i-frames outlast the roll by roll_iframe_tail (covered by
+	# Hurtbox/has_iframes); the hurtbox hides IMMEDIATELY — syncing it in
+	# Hurtbox._process lags a frame and a fast swipe would still connect.
+	player.iframes_until_msec = Time.get_ticks_msec() + int((player.roll_duration + player.roll_iframe_tail) * 1000.0)
+	player.get_node("Hurtbox").monitoring = false
 	player.velocity.x = player.facing * player.roll_speed
 	player.velocity.y = 0.0
 
 
 func exit() -> void:
 	player.invulnerable = false
+	# The hurtbox stays hidden until iframes_until_msec passes (the tail);
+	# Hurtbox._process restores monitoring then.
 
 
 func physics_update(delta: float) -> void:

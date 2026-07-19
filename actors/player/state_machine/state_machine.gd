@@ -18,6 +18,7 @@ func _ready() -> void:
 		_states[StringName(child.name)] = child
 		child.set(&"player", player)
 		child.set(&"machine", self)
+		child.set(&"actor", player) # generic alias — enemy states use this
 	# Deferred: children are ready before their parent, so the player's
 	# @onready refs don't exist yet at this point. The deferred call runs
 	# after the player's _ready(), before the first physics frame.
@@ -33,6 +34,16 @@ func change_state(state_name: StringName) -> void:
 	current = next
 	current.enter()
 	player.emit_state(state_name)
+
+
+## Re-enter the CURRENT state (exit + enter). Needed by parameterized states
+## like Attack: chaining to the next step is a re-entry with different data,
+## and change_state() deliberately no-ops same-name transitions.
+func restart() -> void:
+	if current:
+		current.exit()
+		current.enter()
+		player.emit_state(current.name)
 
 
 func physics_update(delta: float) -> void:

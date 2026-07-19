@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=21 format=3]
 
 [ext_resource type="Script" path="res://actors/player/player.gd" id="1"]
 [ext_resource type="Script" path="res://actors/player/state_machine/state_machine.gd" id="2"]
@@ -10,15 +10,29 @@
 [ext_resource type="Script" path="res://actors/player/states/wall_cling.gd" id="8"]
 [ext_resource type="Script" path="res://actors/player/states/wall_jump.gd" id="9"]
 [ext_resource type="Script" path="res://actors/player/states/ledge_climb.gd" id="10"]
+[ext_resource type="Script" path="res://actors/player/states/attack.gd" id="11"]
+[ext_resource type="Script" path="res://actors/player/states/hurt.gd" id="12"]
+[ext_resource type="Script" path="res://actors/player/states/dead.gd" id="13"]
+[ext_resource type="Resource" path="res://data/weapons/sword.tres" id="14"]
+[ext_resource type="Script" path="res://combat/health.gd" id="15"]
+[ext_resource type="Script" path="res://combat/hitbox.gd" id="16"]
+[ext_resource type="Script" path="res://combat/hurtbox.gd" id="17"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
 size = Vector2(10, 22)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hitbox"]
+size = Vector2(16, 12)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hurtbox"]
+size = Vector2(8, 20)
 
 [node name="Player" type="CharacterBody2D"]
 collision_layer = 2
 collision_mask = 261
 floor_snap_length = 4.0
 script = ExtResource("1")
+weapon = ExtResource("14")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_body")
@@ -40,6 +54,35 @@ collision_mask = 1
 position = Vector2(0, -10)
 target_position = Vector2(8, 0)
 collision_mask = 1
+
+[node name="AnimPlayer" type="AnimationPlayer" parent="."]
+
+[node name="SlashArc" type="Polygon2D" parent="."]
+visible = false
+color = Color(0.95, 0.95, 1, 0.75)
+polygon = PackedVector2Array(2, -11, 14, -9, 18, -3, 18, 3, 14, 9, 2, 11, 7, 0)
+
+[node name="Hitbox" type="Area2D" parent="."]
+collision_layer = 8
+collision_mask = 64
+script = ExtResource("16")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hitbox"]
+shape = SubResource("RectangleShape2D_hitbox")
+
+[node name="Hurtbox" type="Area2D" parent="."]
+collision_layer = 32
+collision_mask = 528
+script = ExtResource("17")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+shape = SubResource("RectangleShape2D_hurtbox")
+
+[node name="Health" type="Node" parent="."]
+script = ExtResource("15")
+max_hp = 30
+max_poise = 10.0
+grace_time = 0.5
 
 [node name="StateMachine" type="Node" parent="."]
 script = ExtResource("2")
@@ -67,3 +110,12 @@ script = ExtResource("9")
 
 [node name="LedgeClimb" type="Node" parent="StateMachine"]
 script = ExtResource("10")
+
+[node name="Attack" type="Node" parent="StateMachine"]
+script = ExtResource("11")
+
+[node name="Hurt" type="Node" parent="StateMachine"]
+script = ExtResource("12")
+
+[node name="Dead" type="Node" parent="StateMachine"]
+script = ExtResource("13")

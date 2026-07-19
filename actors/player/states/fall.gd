@@ -16,6 +16,9 @@ func physics_update(delta: float) -> void:
 		machine.change_state(&"Jump") # coyote-time jump
 	elif player.try_air_jump():
 		machine.change_state(&"Jump") # double jump
+	elif Input.is_action_just_pressed(&"attack"):
+		player.attack_step_index = 0
+		machine.change_state(&"Attack")
 	elif Input.is_action_just_pressed(&"roll"):
 		machine.change_state(&"Roll")
 	elif player.can_ledge_grab():

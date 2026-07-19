@@ -1,0 +1,46 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://combat/weapon_data.gd" id="1"]
+[ext_resource type="Script" path="res://combat/attack_step.gd" id="2"]
+
+[sub_resource type="Resource" id="AttackStep_1"]
+script = ExtResource("2")
+animation = &"attack_1"
+damage = 8
+poise_damage = 8.0
+knockback = Vector2(60, -20)
+lunge = 90.0
+hitbox_size = Vector2(16, 12)
+hitbox_offset = Vector2(10, 0)
+chain_window_start = 0.12
+roll_cancel_start = 0.18
+
+[sub_resource type="Resource" id="AttackStep_2"]
+script = ExtResource("2")
+animation = &"attack_2"
+damage = 8
+poise_damage = 8.0
+knockback = Vector2(60, -20)
+lunge = 80.0
+hitbox_size = Vector2(16, 12)
+hitbox_offset = Vector2(10, 0)
+chain_window_start = 0.10
+roll_cancel_start = 0.14
+
+[sub_resource type="Resource" id="AttackStep_3"]
+script = ExtResource("2")
+animation = &"attack_3"
+damage = 12
+poise_damage = 14.0
+knockback = Vector2(120, -40)
+lunge = 120.0
+hitbox_size = Vector2(20, 12)
+hitbox_offset = Vector2(12, 0)
+chain_window_start = 0.12
+roll_cancel_start = 0.20
+
+[resource]
+script = ExtResource("1")
+id = &"sword"
+display_name = "Balanced Sword"
+steps = Array[Resource]([SubResource("AttackStep_1"), SubResource("AttackStep_2"), SubResource("AttackStep_3")])
