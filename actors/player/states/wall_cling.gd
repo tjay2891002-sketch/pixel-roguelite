@@ -5,7 +5,10 @@ extends "res://actors/player/state_machine/state.gd"
 
 func enter() -> void:
 	tint("#ef9a9a")
-	player.velocity = Vector2.ZERO
+	# Preserve upward momentum on re-grab — rising into a wall slides up and
+	# carries, which is what makes chained wall climbs feel powerful.
+	player.velocity.x = 0.0
+	player.velocity.y = minf(player.velocity.y, player.wall_slide_speed)
 
 
 func physics_update(delta: float) -> void:

@@ -32,7 +32,10 @@ signal state_changed(state_name: StringName)
 
 @export_group("Wall")
 @export var wall_slide_speed := 40.0
-@export var wall_jump_velocity := Vector2(100.0, 250.0)  # gentle push-off: re-grab is quick
+# Small horizontal push: the player stays inside the 8px wall-ray range, so
+# holding toward the wall re-grabs DURING the rise (momentum carries) instead
+# of drifting out and falling back. This is what makes single-wall climbs work.
+@export var wall_jump_velocity := Vector2(50.0, 250.0)
 @export var wall_jump_lockout := 0.08   # reduced air control right after push-off
 
 @export_group("Ledge")

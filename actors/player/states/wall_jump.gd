@@ -2,6 +2,10 @@ extends "res://actors/player/state_machine/state.gd"
 ## WallJump — push-off arc away from the wall. Air control is damped during
 ## the lockout so the push-off reads; after it, behaves like a normal jump
 ## and can re-cling to a wall (including the same one, once steered back).
+##
+## NOTE: unlike a normal jump there is NO jump-cut on release — wall kicks
+## are fixed height. Cutting them made quick taps gut the climb (playtest
+## bug: "can't climb the shaft").
 
 var _lockout := 0.0
 
@@ -9,11 +13,6 @@ var _lockout := 0.0
 func enter() -> void:
 	tint("#80deea")
 	_lockout = player.wall_jump_lockout
-
-
-func handle_input(event: InputEvent) -> void:
-	if event.is_action_released(&"jump"):
-		player.cut_jump()
 
 
 func physics_update(delta: float) -> void:

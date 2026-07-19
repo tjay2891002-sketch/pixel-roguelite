@@ -35,7 +35,7 @@ func _physics_process(_delta: float) -> bool:
 			_release(&"jump")
 		16:
 			_check(_state() == &"WallJump", "jump from cling => WallJump", "got %s" % _state())
-			_check(_player.velocity.x > 80.0, "wall jump pushes away from wall", "velocity.x=%s" % _player.velocity.x)
+			_check(_player.velocity.x > 40.0, "wall jump pushes away from wall", "velocity.x=%s" % _player.velocity.x)
 		17:
 			_release(&"move_left")
 		# --- Phase B: ledge grab + climb
