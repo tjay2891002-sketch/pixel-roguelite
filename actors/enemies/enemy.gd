@@ -24,6 +24,7 @@ signal state_changed(state_name: StringName)
 @export var swoop_time := 0.35         # flyer
 @export var swoop_cooldown := 1.2      # flyer: seconds between swoops
 @export var attack_state := &"Attack"  # state entered after Telegraph (spitter: RangedAttack, flyer: Swoop)
+@export var aim_mode := &""            # telegraph warning: "shot" (aim line) | "dash" (path preview) | "" (none)
 
 ## Cooldown gate for attack states (flyer's swoop sets this on exit).
 var attack_cooldown := 0.0
@@ -38,6 +39,10 @@ var room_bounds := Rect2()
 ## state_machine is untyped on purpose (same convention as the player).
 var state_machine
 
+## Telegraph warning line (aim/preview), built for every enemy; hidden unless
+## the archetype's aim_mode uses it.
+var aim_line: Line2D
+
 @onready var visual: Polygon2D = $Visual
 @onready var hitbox: Area2D = get_node_or_null("Hitbox")
 @onready var health: Node = $Health
@@ -49,6 +54,12 @@ func _ready() -> void:
 	state_machine = $StateMachine
 	home_x = global_position.x
 	add_to_group(&"enemy")
+	aim_line = Line2D.new()
+	aim_line.name = "AimLine"
+	aim_line.width = 1.0
+	aim_line.default_color = Color(1.0, 0.35, 0.25, 0.6)
+	aim_line.visible = false
+	add_child(aim_line)
 	if hitbox:
 		hitbox.position.x = absf(hitbox.position.x) * facing
 	var pivot := get_node_or_null("SlashPivot")
@@ -116,6 +127,16 @@ func swipe_hit_info() -> Dictionary:
 
 func emit_state(state_name: StringName) -> void:
 	state_changed.emit(state_name)
+
+
+## Show/update the telegraph warning line (points are LOCAL to this enemy).
+func update_aim_line(points: PackedVector2Array) -> void:
+	aim_line.points = points
+	aim_line.visible = true
+
+
+func hide_aim_line() -> void:
+	aim_line.visible = false
 
 
 func _on_detection_entered(body: Node2D) -> void:

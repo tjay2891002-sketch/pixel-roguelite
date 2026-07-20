@@ -8,6 +8,7 @@ var _timer := 0.0
 func enter() -> void:
 	tint("#fff176")
 	_timer = 0.6
+	actor.hide_aim_line()
 	if actor.hitbox:
 		actor.hitbox.deactivate()
 	# hide the swipe arc if the stagger interrupted a telegraph/strike

@@ -20,6 +20,7 @@ func enter() -> void:
 
 func exit() -> void:
 	actor.visual.modulate = Color.WHITE
+	actor.hide_aim_line()
 	var arc = actor.get_node_or_null("SlashPivot/SlashArc")
 	if arc:
 		arc.visible = false
@@ -30,5 +31,14 @@ func physics_update(delta: float) -> void:
 	actor.velocity.x = 0.0
 	# red blink — readable even in greybox
 	actor.visual.modulate = Color(1.0, 0.4, 0.4) if int(_timer * 12.0) % 2 == 0 else Color.WHITE
+	# attack warning lines (aim_mode): spitter aims at the player live,
+	# flyer previews its swoop path — both match what actually fires
+	if actor.aim_mode == &"shot" and actor.target:
+		actor.update_aim_line(PackedVector2Array([
+			Vector2.ZERO, actor.target.global_position - actor.global_position]))
+	elif actor.aim_mode == &"dash" and actor.target:
+		var dir = (actor.target.global_position - actor.global_position).normalized()
+		actor.update_aim_line(PackedVector2Array([
+			Vector2.ZERO, dir * actor.swoop_speed * actor.swoop_time]))
 	if _timer <= 0.0:
 		machine.change_state(actor.attack_state)

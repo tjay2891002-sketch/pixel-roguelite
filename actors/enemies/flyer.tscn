@@ -38,6 +38,7 @@ flying = true
 knockback_resist = 0.8
 swoop_speed = 190.0
 attack_state = &"Swoop"
+aim_mode = &"dash"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_body")

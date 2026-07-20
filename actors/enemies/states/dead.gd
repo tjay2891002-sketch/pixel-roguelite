@@ -9,6 +9,7 @@ func enter() -> void:
 	_timer = 0.6
 	actor.velocity = Vector2.ZERO
 	actor.collision_layer = 0
+	actor.hide_aim_line()
 	if actor.hitbox:
 		actor.hitbox.deactivate()
 	if actor.has_node("Hurtbox"):

@@ -19,6 +19,7 @@ var _projectile
 var _saw_hover := false
 var _saw_flyer_telegraph := false
 var _saw_swoop := false
+var _saw_flyer_aim := false
 var _failures: Array[String] = []
 
 
@@ -55,13 +56,17 @@ func _physics_process(_delta: float) -> bool:
 	if _flyer != null:
 		var fs: StringName = _flyer.state_machine.current.name
 		if fs == &"Hover": _saw_hover = true
-		if fs == &"Telegraph": _saw_flyer_telegraph = true
+		if fs == &"Telegraph":
+			_saw_flyer_telegraph = true
+			if _flyer.get_node("AimLine").visible:
+				_saw_flyer_aim = true
 		if fs == &"Swoop": _saw_swoop = true
 
 	match _frame:
 		12:
 			_check(_spitter.state_machine.current.name == &"Telegraph",
 				"spitter telegraphs when player in range", "state=%s" % _spitter.state_machine.current.name)
+			_check(_spitter.get_node("AimLine").visible, "spitter shows aim line during telegraph", "")
 		50:
 			_check(_projectile != null, "spitter fires a projectile", "")
 			if _projectile:
@@ -79,6 +84,7 @@ func _physics_process(_delta: float) -> bool:
 		150:
 			_check(_saw_hover, "flyer hovers toward the player", "")
 			_check(_saw_flyer_telegraph, "flyer telegraphs", "")
+			_check(_saw_flyer_aim, "flyer shows swoop path preview during telegraph", "")
 			_check(_saw_swoop, "flyer swoops", "")
 		152:
 			# poise-break the flyer: it must return to Hover, not stick in Stagger

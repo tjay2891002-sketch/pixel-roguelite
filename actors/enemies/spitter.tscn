@@ -32,6 +32,7 @@ telegraph_time = 0.6
 attack_recovery_time = 1.0
 swipe_damage = 5
 attack_state = &"RangedAttack"
+aim_mode = &"shot"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_body")
