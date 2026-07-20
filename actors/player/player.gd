@@ -43,7 +43,6 @@ const PlaceholderAnims = preload("res://actors/player/placeholder_anims.gd")
 
 @export_group("Ledge")
 @export var ledge_climb_duration := 0.28
-@export var ledge_up_offset := 24.0     # fallback climb height if the top probe misses
 
 @export_group("Combat")
 @export var weapon: WeaponData
