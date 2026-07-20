@@ -186,7 +186,9 @@ func _set_room_locked(room: Dictionary, locked: bool) -> void:
 			# player is standing in the doorway — close it once they step clear
 			_pending_blockers.append(blocker)
 		else:
-			blocker.shape.disabled = not locked
+			# DEFERRED: this is called from body_entered (physics flush) —
+			# collision state can't change mid-flush
+			blocker.shape.set_deferred(&"disabled", not locked)
 			blocker.vis.visible = locked
 
 
