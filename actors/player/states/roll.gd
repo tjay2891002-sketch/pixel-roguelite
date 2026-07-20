@@ -21,12 +21,16 @@ func enter() -> void:
 
 func exit() -> void:
 	player.invulnerable = false
-	# The hurtbox stays hidden until iframes_until_msec passes (the tail);
+	player.visual.rotation = 0.0
+	# The hurtbox stays hidden until iframes_left runs out (the tail);
 	# Hurtbox._process restores monitoring then.
 
 
 func physics_update(delta: float) -> void:
 	_timer -= delta
+	# Greybox tumble: one full flip over the roll duration, spun forward in
+	# the facing direction — without this the roll read as "just a sprint".
+	player.visual.rotation = (1.0 - clampf(_timer / player.roll_duration, 0.0, 1.0)) * TAU * player.facing
 	player.velocity.x = player.facing * player.roll_speed
 	player.velocity.y = 0.0
 
