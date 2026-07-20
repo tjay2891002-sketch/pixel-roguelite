@@ -29,8 +29,10 @@ func handle_input(_event: InputEvent) -> void:
 
 
 ## Greybox feedback: tint the placeholder visual per state.
+## Sprite actors (AnimatedSprite2D) skip this — the art carries the read.
 func tint(hex: String) -> void:
-	player.visual.color = Color(hex)
+	if player.visual is Polygon2D:
+		player.visual.color = Color(hex)
 
 
 ## (Enemy states) Route back to the archetype's pursuit behavior after an

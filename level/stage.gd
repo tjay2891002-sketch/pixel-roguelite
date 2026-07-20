@@ -22,7 +22,7 @@ static var _title_shown_once := false
 
 ## Spawn archetypes by map letter (M4). E = random pick from the pool.
 const ENEMY_SCENES := {
-	&"E": preload("res://actors/enemies/enemy_base.tscn"),
+	&"E": preload("res://actors/enemies/rat_rusher.tscn"),
 	&"R": preload("res://actors/enemies/spitter.tscn"),
 	&"F": preload("res://actors/enemies/flyer.tscn"),
 	&"H": preload("res://actors/enemies/heavy.tscn"),

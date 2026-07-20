@@ -43,7 +43,12 @@ var state_machine
 ## the archetype's aim_mode uses it.
 var aim_line: Line2D
 
-@onready var visual: Polygon2D = $Visual
+## Visual: Polygon2D "Visual" (greybox) or AnimatedSprite2D "Sprite" (art).
+## Resolved in _ready with a fallback so both scene styles share this script.
+var visual
+
+const RAT_ANIMS = preload("res://actors/enemies/rat_anims.gd")
+
 @onready var hitbox: Area2D = get_node_or_null("Hitbox")
 @onready var health: Node = $Health
 @onready var detection: Area2D = get_node_or_null("DetectionZone")
@@ -54,6 +59,12 @@ func _ready() -> void:
 	state_machine = $StateMachine
 	home_x = global_position.x
 	add_to_group(&"enemy")
+	visual = get_node_or_null("Visual")
+	if visual == null:
+		visual = get_node_or_null("Sprite")
+	if visual is AnimatedSprite2D:
+		visual.sprite_frames = RAT_ANIMS.build()
+		state_changed.connect(_on_state_sprite_anim)
 	aim_line = Line2D.new()
 	aim_line.name = "AimLine"
 	aim_line.width = 1.0
@@ -91,12 +102,27 @@ func set_facing(dir: int) -> void:
 	if dir == 0 or dir == facing:
 		return
 	facing = dir
-	visual.scale.x = facing
+	if visual is AnimatedSprite2D:
+		visual.flip_h = (facing == 1) # base rat art faces left
+	else:
+		visual.scale.x = facing
 	if hitbox:
 		hitbox.position.x = absf(hitbox.position.x) * facing
 	var pivot := get_node_or_null("SlashPivot")
 	if pivot:
 		pivot.scale.x = facing
+
+
+## SpriteActors: state machine drives the animation (greybox actors tint
+## instead — see state.gd's tint()).
+func _on_state_sprite_anim(state_name: StringName) -> void:
+	match state_name:
+		&"Idle": visual.play(&"idle")
+		&"Patrol", &"Chase": visual.play(&"run")
+		&"Telegraph": visual.play(&"attack", 0.4)
+		&"Attack": visual.play(&"attack", 2.0)
+		&"Stagger": visual.play(&"hurt")
+		&"Dead": visual.play(&"death")
 
 
 func face_target() -> void:
