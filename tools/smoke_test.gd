@@ -87,7 +87,14 @@ func _physics_process(_delta: float) -> bool:
 			_check(_state() == &"Roll", "roll press => Roll", "got %s" % _state())
 			_check(_player.invulnerable, "i-frames during roll", "invulnerable=false")
 		195:
+			_release(&"move_left") # held since phase C — release before phase D
 			_check(not _player.invulnerable, "i-frames end after roll", "still invulnerable")
+		# --- Phase D: level-edge kill zone catches falls
+		196:
+			_force_idle()
+			_teleport(Vector2(-60, 100)) # off the left platform edge
+		240:
+			_check(_player.global_position.x == 40.0, "fall off left edge => respawn at spawn", "x=%s" % _player.global_position.x)
 			_finish()
 	return false
 

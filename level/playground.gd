@@ -37,7 +37,10 @@ const GEOMETRY := [
 	[Rect2(1160, 20, 48, 130), BLOCK_COLOR],
 ]
 
-const KILL_ZONE := Rect2(-40, 300, 1520, 40)
+# Covers well past both level edges — the platform ends at x=-40/1448, and a
+# body falling off an edge must never slip past the zone and vanish into the
+# void (playtest bug: walking left from spawn made the player disappear).
+const KILL_ZONE := Rect2(-400, 280, 2400, 60)
 
 const DUMMY_SCENE := preload("res://actors/enemies/dummy.tscn")
 const WALKER_SCENE := preload("res://actors/enemies/enemy_base.tscn")
@@ -74,7 +77,7 @@ func _ready() -> void:
 	_camera.limit_left = -40
 	_camera.limit_top = -200
 	_camera.limit_right = 1480
-	_camera.limit_bottom = 300
+	_camera.limit_bottom = 280
 	_camera.global_position = SPAWN
 	_camera.add_to_group(&"player_camera")
 	add_child(_camera)
@@ -157,6 +160,8 @@ func _build_goal_flag() -> void:
 
 
 func _on_kill_zone_body_entered(body) -> void:
+	# NOTE: teleports ANY body (player AND enemies). Fine for the greybox —
+	# M3's kill zones should kill enemies instead of relocating them.
 	body.global_position = SPAWN
 	body.velocity = Vector2.ZERO
 
