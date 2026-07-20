@@ -20,4 +20,4 @@ func physics_update(delta: float) -> void:
 	_timer -= delta
 	actor.velocity.x = move_toward(actor.velocity.x, 0.0, 300.0 * delta)
 	if _timer <= 0.0:
-		machine.change_state(&"Chase" if actor.target != null else &"Patrol")
+		resume_pursuit()

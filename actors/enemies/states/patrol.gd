@@ -10,7 +10,7 @@ func enter() -> void:
 
 func physics_update(delta: float) -> void:
 	if actor.target != null:
-		machine.change_state(&"Chase")
+		resume_pursuit()
 		return
 	if actor.global_position.x > actor.home_x + actor.patrol_range:
 		_dir = -1.0

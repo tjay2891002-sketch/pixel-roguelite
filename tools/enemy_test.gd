@@ -81,19 +81,28 @@ func _physics_process(_delta: float) -> bool:
 			_check(_saw_flyer_telegraph, "flyer telegraphs", "")
 			_check(_saw_swoop, "flyer swoops", "")
 		152:
+			# poise-break the flyer: it must return to Hover, not stick in Stagger
+			_flyer.health.take_hit({
+				&"damage": 1, &"poise_damage": 12.0,
+				&"knockback": Vector2.ZERO, &"attacker": _player})
+		154:
+			_check(_flyer.state_machine.current.name == &"Stagger", "flyer staggers on poise break", "state=%s" % _flyer.state_machine.current.name)
+		200:
+			_check(_flyer.state_machine.current.name == &"Hover", "flyer returns to Hover after stagger", "state=%s" % _flyer.state_machine.current.name)
+		202:
 			_heavy = load("res://actors/enemies/heavy.tscn").instantiate()
 			root.get_node("Arena").add_child(_heavy)
 			_heavy.global_position = Vector2(200, 139)
-		155:
+		205:
 			_hit_heavy(8, 8.0)
-		156:
+		206:
 			_check(_heavy.velocity.x < 20.0 and _heavy.velocity.x > 0.0,
 				"heavy knockback reduced by resist", "vx=%.1f (normal would be ~53)" % _heavy.velocity.x)
-		166:
+		216:
 			_hit_heavy(9, 8.0)
-		177:
+		227:
 			_hit_heavy(12, 14.0)
-		185:
+		235:
 			_check(_heavy.health.hp == 31, "heavy takes chain damage (60->31)", "hp=%d" % _heavy.health.hp)
 			_check(_heavy.state_machine.current.name != &"Stagger",
 				"one chain does NOT stagger the heavy (poise 80)", "state=%s" % _heavy.state_machine.current.name)

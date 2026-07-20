@@ -26,4 +26,4 @@ func physics_update(delta: float) -> void:
 	_timer -= delta
 	actor.velocity.x = 0.0
 	if _timer <= 0.0:
-		machine.change_state(&"Chase" if actor.target != null else &"Idle")
+		resume_pursuit()

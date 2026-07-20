@@ -45,4 +45,4 @@ func physics_update(delta: float) -> void:
 			actor.hitbox.deactivate()
 			actor.velocity.x = 0.0
 	elif _timer <= 0.0:
-		machine.change_state(&"Chase" if actor.target != null else &"Patrol")
+		resume_pursuit()

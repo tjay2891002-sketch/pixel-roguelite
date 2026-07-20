@@ -11,4 +11,4 @@ func enter() -> void:
 func physics_update(delta: float) -> void:
 	actor.walk(0.0, delta)
 	if actor.target != null:
-		machine.change_state(&"Hover" if machine.has_state(&"Hover") else &"Chase")
+		resume_pursuit()
