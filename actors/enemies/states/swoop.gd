@@ -19,6 +19,7 @@ func enter() -> void:
 
 func exit() -> void:
 	actor.hitbox.deactivate()
+	actor.attack_cooldown = actor.swoop_cooldown # gate the next swoop
 
 
 func physics_update(delta: float) -> void:

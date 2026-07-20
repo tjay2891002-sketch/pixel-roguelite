@@ -1,14 +1,17 @@
 extends "res://actors/player/state_machine/state.gd"
 ## Hover — the flyer's approach: drift to a hovering offset above-beside the
 ## target (with a gentle bob), then drop into Telegraph when close.
-## 2D movement; no gravity (flying actor).
+## The hover point is clamped inside the room so corners/ceilings can't
+## trap the flyer; a watchdog forces the attack if it still can't progress.
 
 var _t := 0.0
+var _stuck := 0.0
 
 
 func enter() -> void:
 	tint("#b39ddb")
 	_t = 0.0
+	_stuck = 0.0
 
 
 func physics_update(delta: float) -> void:
@@ -18,8 +21,20 @@ func physics_update(delta: float) -> void:
 		return
 	actor.face_target()
 	var offset := Vector2(-actor.facing * 34.0, -34.0 + sin(_t * 2.5) * 6.0)
-	var to: Vector2 = (actor.target.global_position + offset) - actor.global_position
+	var target_pos: Vector2 = actor.target.global_position + offset
+	if actor.room_bounds.has_area():
+		var inner = actor.room_bounds.grow(-14.0)
+		target_pos = target_pos.clamp(inner.position, inner.end - Vector2(1, 1))
+	var to: Vector2 = target_pos - actor.global_position
 	var desired = Vector2.ZERO if to.length() < 6.0 else to.normalized() * actor.move_speed
 	actor.velocity = actor.velocity.move_toward(desired, 300.0 * delta)
-	if to.length() < 44.0:
+
+	# watchdog: wedged in a corner with no progress -> attack anyway
+	if to.length() > 30.0 and actor.velocity.length() < 5.0:
+		_stuck += delta
+	else:
+		_stuck = 0.0
+	if _stuck > 1.0:
+		machine.change_state(&"Telegraph")
+	elif to.length() < 44.0 and actor.attack_cooldown <= 0.0:
 		machine.change_state(&"Telegraph")

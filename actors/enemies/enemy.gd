@@ -22,7 +22,11 @@ signal state_changed(state_name: StringName)
 @export var projectile_speed := 90.0   # spitter
 @export var swoop_speed := 220.0       # flyer
 @export var swoop_time := 0.35         # flyer
+@export var swoop_cooldown := 1.2      # flyer: seconds between swoops
 @export var attack_state := &"Attack"  # state entered after Telegraph (spitter: RangedAttack, flyer: Swoop)
+
+## Cooldown gate for attack states (flyer's swoop sets this on exit).
+var attack_cooldown := 0.0
 
 var facing := -1
 var home_x := 0.0
@@ -58,6 +62,7 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	attack_cooldown = maxf(attack_cooldown - delta, 0.0)
 	state_machine.physics_update(delta)
 	if not flying:
 		velocity.y = minf(velocity.y + gravity * delta, 320.0)

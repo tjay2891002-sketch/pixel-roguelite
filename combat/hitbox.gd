@@ -12,8 +12,10 @@ extends Area2D
 ## fizzles (found by tools/combat_test.gd: chain hits 2->3 got eaten).
 
 var _hit_info: Dictionary = {}
-var _already_hit: Array[Area2D] = [] # one successful hit per swing per target
-var _pending: Array[Area2D] = []     # rejected hits to retry while active
+# Untyped on purpose: entries may be freed mid-list (kills, regeneration),
+# and Godot's TypedArray rejects freed objects even on erase().
+var _already_hit: Array = [] # one successful hit per swing per target
+var _pending: Array = []     # rejected hits to retry while active
 
 
 func _ready() -> void:
