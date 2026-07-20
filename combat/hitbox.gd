@@ -53,8 +53,11 @@ func _try_hit(area: Area2D) -> void:
 		return
 	var info := _hit_info.duplicate()
 	info[&"hit_position"] = area.global_position
-	if area.receive_hit(info):
+	var result: int = area.receive_hit(info)
+	if result != 0:
+		# connected, or whiffed by i-frames — either way this swing is done
+		# with that target (no retry)
 		_pending.erase(area)
 		_already_hit.append(area)
 	elif not _pending.has(area):
-		_pending.append(area)
+		_pending.append(area) # post-hit grace: retry while the swing is active

@@ -13,7 +13,7 @@ func enter() -> void:
 	# Combat i-frames outlast the roll by roll_iframe_tail (covered by
 	# Hurtbox/has_iframes); the hurtbox hides IMMEDIATELY — syncing it in
 	# Hurtbox._process lags a frame and a fast swipe would still connect.
-	player.iframes_until_msec = Time.get_ticks_msec() + int((player.roll_duration + player.roll_iframe_tail) * 1000.0)
+	player.iframes_left = player.roll_duration + player.roll_iframe_tail
 	player.get_node("Hurtbox").monitoring = false
 	player.velocity.x = player.facing * player.roll_speed
 	player.velocity.y = 0.0

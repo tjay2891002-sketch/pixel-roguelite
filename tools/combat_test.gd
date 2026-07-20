@@ -71,8 +71,9 @@ func _physics_process(_delta: float) -> bool:
 			_frame, _player.global_position.x, _player.global_position.y,
 			_walker.global_position.x, _walker.global_position.y, ws, _walker.target != null])
 
-	# Phase C: react to the telegraph like a human — roll in its second half
-	# so the i-frames cover the strike (telegraph 27f > roll 19f).
+	# Phase C: react to the telegraph like a human — roll almost immediately
+	# (the instinct dodge). With telegraph 0.40s and roll i-frames 0.44s,
+	# ANY roll during the telegraph must dodge the strike.
 	if _watch_roll and _walker != null:
 		var ws: StringName = _walker.state_machine.current.name
 		if ws == &"Telegraph" and _telegraph_frame < 0:
@@ -80,7 +81,7 @@ func _physics_process(_delta: float) -> bool:
 		elif ws != &"Telegraph" and ws != &"Attack":
 			_telegraph_frame = -1
 			_roll_pressed = false
-		if _telegraph_frame >= 0 and not _roll_pressed and _frame >= _telegraph_frame + 12:
+		if _telegraph_frame >= 0 and not _roll_pressed and _frame >= _telegraph_frame + 2:
 			_press(&"roll")
 			_roll_pressed = true
 

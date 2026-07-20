@@ -31,7 +31,7 @@ const PlaceholderAnims = preload("res://actors/player/placeholder_anims.gd")
 @export var roll_speed := 170.0
 @export var roll_duration := 0.32
 @export var roll_cancel_window := 0.10  # last N seconds can cancel into jump/move
-@export var roll_iframe_tail := 0.06    # i-frames outlast the roll by this much
+@export var roll_iframe_tail := 0.12    # i-frames outlast the roll by this much
 
 @export_group("Wall")
 @export var wall_slide_speed := 40.0
@@ -50,7 +50,7 @@ const PlaceholderAnims = preload("res://actors/player/placeholder_anims.gd")
 
 var facing := 1
 var invulnerable := false               # true during Roll (states/tests read this)
-var iframes_until_msec := 0             # combat i-frames window: roll + tail
+var iframes_left := 0.0                 # combat i-frames window in game-time seconds
 var coyote_timer := 0.0
 var jump_buffer_timer := 0.0
 var air_jumps_left := 0
@@ -97,6 +97,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func _physics_process(delta: float) -> void:
 	coyote_timer = maxf(coyote_timer - delta, 0.0)
 	jump_buffer_timer = maxf(jump_buffer_timer - delta, 0.0)
+	iframes_left = maxf(iframes_left - delta, 0.0)
 	state_machine.physics_update(delta)
 	move_and_slide()
 	if is_on_floor():
@@ -187,10 +188,11 @@ func emit_state(state_name: StringName) -> void:
 	state_changed.emit(state_name)
 
 
-## The combat i-frame window (roll duration + tail). Hurtbox/receive_hit use
-## this rather than the Roll-scoped `invulnerable` flag.
+## The combat i-frame window (roll duration + tail), counted down in game
+## time — deterministic under hitstop and unthrottled headless, unlike
+## wall-clock timestamps.
 func has_iframes() -> bool:
-	return Time.get_ticks_msec() < iframes_until_msec
+	return iframes_left > 0.0
 
 
 # --- Combat -------------------------------------------------------------------

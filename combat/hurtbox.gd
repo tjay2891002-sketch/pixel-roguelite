@@ -19,17 +19,18 @@ func _process(_delta: float) -> void:
 		monitoring = not safe
 
 
-## Returns true if the hit connected (false = grace/i-frames; the hitbox
-## keeps it pending and retries while the swing is active).
-func receive_hit(hit_info: Dictionary) -> bool:
+## Returns the hit result: 1 = connected, 0 = rejected by post-hit grace
+## (hitbox retries while the swing is active), -1 = rejected by i-frames
+## (the swing WHIFFED — no retry; a dodge beats the whole swing).
+func receive_hit(hit_info: Dictionary) -> int:
 	if _health == null:
-		return false
+		return -1
 	# Belt-and-braces i-frame guard: hurtbox.monitoring lags the flag by a
 	# frame (it's synced in _process), so check the flag directly too.
 	var owner = get_parent()
 	if owner.get("invulnerable") == true:
-		return false
+		return -1
 	if owner.has_method(&"has_iframes") and owner.has_iframes():
-		return false
+		return -1
 	hit_info[&"victim"] = get_parent()
-	return _health.take_hit(hit_info)
+	return 1 if _health.take_hit(hit_info) else 0
