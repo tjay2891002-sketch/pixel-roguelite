@@ -39,6 +39,10 @@ func _physics_process(_delta: float) -> void:
 	if not monitoring or _pending.is_empty():
 		return
 	for area in _pending.duplicate():
+		if not is_instance_valid(area):
+			# target was freed while pending (enemy died / stage regenerated)
+			_pending.erase(area)
+			continue
 		_try_hit(area)
 
 
@@ -48,8 +52,10 @@ func _on_area_entered(area: Area2D) -> void:
 	_try_hit(area)
 
 
-func _try_hit(area: Area2D) -> void:
-	if not area.has_method(&"receive_hit"):
+## `area` is deliberately untyped: pending entries may reference freed
+## objects, and a typed Area2D parameter rejects them at the call boundary.
+func _try_hit(area) -> void:
+	if not is_instance_valid(area) or not area.has_method(&"receive_hit"):
 		return
 	var info := _hit_info.duplicate()
 	info[&"hit_position"] = area.global_position
