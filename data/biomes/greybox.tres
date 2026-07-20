@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="BiomeConfig" load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://level/generator/biome_config.gd" id="1"]
+[ext_resource type="PackedScene" path="res://level/chunks/biome_greybox/start.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://level/chunks/biome_greybox/combat_a.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://level/chunks/biome_greybox/combat_b.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://level/chunks/biome_greybox/combat_c.tscn" id="5"]
+[ext_resource type="PackedScene" path="res://level/chunks/biome_greybox/shop.tscn" id="6"]
+[ext_resource type="PackedScene" path="res://level/chunks/biome_greybox/treasure.tscn" id="7"]
+[ext_resource type="PackedScene" path="res://level/chunks/biome_greybox/boss.tscn" id="8"]
+[ext_resource type="PackedScene" path="res://level/chunks/biome_greybox/branch.tscn" id="9"]
+
+[resource]
+script = ExtResource("1")
+id = &"greybox"
+path_roles = Array[int]([0, 1, 1, 3, 1, 4])
+start_chunks = Array[PackedScene]([ExtResource("2")])
+combat_chunks = Array[PackedScene]([ExtResource("3"), ExtResource("4"), ExtResource("5")])
+shop_chunks = Array[PackedScene]([ExtResource("6")])
+treasure_chunks = Array[PackedScene]([ExtResource("7")])
+boss_chunks = Array[PackedScene]([ExtResource("8")])
+branch_chunks = Array[PackedScene]([ExtResource("9")])
+branch_chance = 0.6
+shop_chance = 0.3
