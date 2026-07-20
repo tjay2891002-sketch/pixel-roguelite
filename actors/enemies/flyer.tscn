@@ -1,0 +1,106 @@
+[gd_scene load_steps=17 format=3]
+
+[ext_resource type="Script" path="res://actors/enemies/enemy.gd" id="1"]
+[ext_resource type="Script" path="res://actors/player/state_machine/state_machine.gd" id="2"]
+[ext_resource type="Script" path="res://actors/enemies/states/idle.gd" id="3"]
+[ext_resource type="Script" path="res://actors/enemies/states/patrol.gd" id="4"]
+[ext_resource type="Script" path="res://actors/enemies/states/hover.gd" id="5"]
+[ext_resource type="Script" path="res://actors/enemies/states/telegraph.gd" id="6"]
+[ext_resource type="Script" path="res://actors/enemies/states/swoop.gd" id="7"]
+[ext_resource type="Script" path="res://actors/enemies/states/stagger.gd" id="8"]
+[ext_resource type="Script" path="res://actors/enemies/states/dead.gd" id="9"]
+[ext_resource type="Script" path="res://combat/health.gd" id="10"]
+[ext_resource type="Script" path="res://combat/hitbox.gd" id="11"]
+[ext_resource type="Script" path="res://combat/hurtbox.gd" id="12"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
+size = Vector2(12, 12)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hitbox"]
+size = Vector2(12, 10)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hurtbox"]
+size = Vector2(12, 12)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_detection"]
+radius = 64.0
+
+[node name="Flyer" type="CharacterBody2D"]
+collision_layer = 4
+collision_mask = 263
+floor_snap_length = 4.0
+script = ExtResource("1")
+move_speed = 45.0
+attack_range = 40.0
+swipe_damage = 5
+swipe_poise_damage = 8.0
+flying = true
+knockback_resist = 0.8
+attack_state = &"Swoop"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_body")
+
+[node name="Visual" type="Polygon2D" parent="."]
+color = Color(0.7, 0.55, 0.85, 1)
+polygon = PackedVector2Array(-6, -6, 6, -6, 6, 6, -6, 6)
+
+[node name="HpLabel" type="Label" parent="."]
+offset_left = -8.0
+offset_top = -26.0
+theme_override_font_sizes/font_size = 6
+text = "14"
+
+[node name="Hitbox" type="Area2D" parent="."]
+position = Vector2(10, 0)
+collision_layer = 16
+collision_mask = 32
+script = ExtResource("11")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hitbox"]
+shape = SubResource("RectangleShape2D_hitbox")
+
+[node name="Hurtbox" type="Area2D" parent="."]
+collision_layer = 64
+collision_mask = 520
+script = ExtResource("12")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+shape = SubResource("RectangleShape2D_hurtbox")
+
+[node name="Health" type="Node" parent="."]
+script = ExtResource("10")
+max_hp = 14
+max_poise = 10.0
+grace_time = 0.15
+
+[node name="DetectionZone" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionZone"]
+shape = SubResource("CircleShape2D_detection")
+
+[node name="StateMachine" type="Node" parent="."]
+script = ExtResource("2")
+
+[node name="Idle" type="Node" parent="StateMachine"]
+script = ExtResource("3")
+
+[node name="Patrol" type="Node" parent="StateMachine"]
+script = ExtResource("4")
+
+[node name="Hover" type="Node" parent="StateMachine"]
+script = ExtResource("5")
+
+[node name="Telegraph" type="Node" parent="StateMachine"]
+script = ExtResource("6")
+
+[node name="Swoop" type="Node" parent="StateMachine"]
+script = ExtResource("7")
+
+[node name="Stagger" type="Node" parent="StateMachine"]
+script = ExtResource("8")
+
+[node name="Dead" type="Node" parent="StateMachine"]
+script = ExtResource("9")

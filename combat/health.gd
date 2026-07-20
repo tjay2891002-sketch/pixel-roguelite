@@ -53,7 +53,8 @@ func take_hit(hit_info: Dictionary) -> bool:
 
 	var actor := get_parent()
 	if actor is CharacterBody2D:
-		actor.velocity = hit_info.get(&"knockback", Vector2.ZERO)
+		var resist: float = actor.get("knockback_resist") if actor.get("knockback_resist") != null else 1.0
+		actor.velocity = hit_info.get(&"knockback", Vector2.ZERO) * resist
 
 	damaged.emit(hit_info)
 	EventBus.hit_landed.emit(hit_info)

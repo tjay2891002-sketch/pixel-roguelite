@@ -17,6 +17,12 @@ signal state_changed(state_name: StringName)
 @export var swipe_poise_damage := 10.0
 @export var swipe_knockback := Vector2(80, -30)
 @export var gravity := 900.0
+@export var flying := false            # flyers skip gravity entirely
+@export var knockback_resist := 1.0    # heavy: 0.25 — Health multiplies knockback by this
+@export var projectile_speed := 90.0   # spitter
+@export var swoop_speed := 220.0       # flyer
+@export var swoop_time := 0.35         # flyer
+@export var attack_state := &"Attack"  # state entered after Telegraph (spitter: RangedAttack, flyer: Swoop)
 
 var facing := -1
 var home_x := 0.0
@@ -53,7 +59,8 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	state_machine.physics_update(delta)
-	velocity.y = minf(velocity.y + gravity * delta, 320.0)
+	if not flying:
+		velocity.y = minf(velocity.y + gravity * delta, 320.0)
 	move_and_slide()
 	if room_bounds.has_area():
 		global_position.x = clampf(global_position.x, room_bounds.position.x + 8.0, room_bounds.end.x - 8.0)

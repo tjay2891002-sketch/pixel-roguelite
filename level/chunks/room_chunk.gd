@@ -7,9 +7,10 @@ extends Node2D
 ##
 ## Map legend:
 ##   #  solid (floor/wall tile)      ,  accent tile
-##   ^ v < >  door connector (TOP cell of a 2-tall floor-level door;
-##            the cell below must be open)
-##   E  enemy spawn    P  player start    T  treasure    B  boss door
+##   ^ v < >  door connector (TOP cell of a 3-tall floor-level door;
+##            the two cells below must be open)
+##   E  enemy spawn (random archetype)    R  spitter    F  flyer    H  heavy
+##   P  player start    T  treasure    B  boss door
 ##
 ## Convention: chunks are fully walled rectangles; every door char sits on a
 ## border cell. Chunks connect door-to-door, so every jump inside a chunk is
@@ -56,7 +57,7 @@ func analyze() -> void:
 					connector.position = Vector2((x + 0.5) * TILE_SIZE, (y + 0.5) * TILE_SIZE)
 					add_child(connector) # safe on detached nodes; frees cascade
 					_connectors.append(connector)
-				"E", "P", "T", "B":
+				"E", "R", "F", "H", "P", "T", "B":
 					var kind := StringName(c)
 					if not _spawns.has(kind):
 						_spawns[kind] = []

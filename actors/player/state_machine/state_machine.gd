@@ -51,6 +51,10 @@ func physics_update(delta: float) -> void:
 		current.physics_update(delta)
 
 
+func has_state(state_name: StringName) -> bool:
+	return _states.has(state_name)
+
+
 func handle_input(event: InputEvent) -> void:
 	if current:
 		current.handle_input(event)

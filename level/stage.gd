@@ -4,11 +4,20 @@ extends Node2D
 ## their doors until cleared, the boss door regenerates the next stage).
 
 const PlayerScene := preload("res://actors/player/player.tscn")
-const WalkerScene := preload("res://actors/enemies/enemy_base.tscn")
 const Generator := preload("res://level/generator/stage_generator.gd")
 const GreyboxBiome := preload("res://data/biomes/greybox.tres")
 
 const TILE := 16
+
+## Spawn archetypes by map letter (M4). E = random pick from the pool.
+const ENEMY_SCENES := {
+	&"E": preload("res://actors/enemies/enemy_base.tscn"),
+	&"R": preload("res://actors/enemies/spitter.tscn"),
+	&"F": preload("res://actors/enemies/flyer.tscn"),
+	&"H": preload("res://actors/enemies/heavy.tscn"),
+}
+const ENEMY_COST := {&"E": 2, &"R": 2, &"F": 3, &"H": 4}
+const RANDOM_POOL := [&"E", &"R", &"F", &"H"]
 
 var stage_index := 0
 var player # untyped (see state.gd convention)
@@ -16,6 +25,7 @@ var _camera: Camera2D
 var _rooms: Array = [] # per-placement runtime records
 var _pending_blockers: Array = [] # blockers waiting for the player to step clear
 var _state_name := "Idle"
+var _rng: RandomNumberGenerator
 
 @onready var _debug_label: Label = $HUD/DebugLabel
 
@@ -42,15 +52,15 @@ func _process(_delta: float) -> void:
 
 
 func _build_stage() -> void:
-	var rng := RunManager.stage_rng(stage_index)
-	var layout := Generator.generate(GreyboxBiome, rng)
+	_rng = RunManager.stage_rng(stage_index)
+	var layout := Generator.generate(GreyboxBiome, _rng)
 	if layout.is_empty():
 		push_error("[Stage] generation failed; nothing to build")
 		return
 	Generator.instantiate(layout, $Chunks)
 	_rooms.clear()
-	for pl in layout:
-		_setup_room(pl)
+	for i in layout.size():
+		_setup_room(layout[i], i)
 	_setup_player(layout)
 	# camera starts on the start room
 	if not _rooms.is_empty():
@@ -59,7 +69,7 @@ func _build_stage() -> void:
 
 # --- room setup --------------------------------------------------------------
 
-func _setup_room(pl: Dictionary) -> void:
+func _setup_room(pl: Dictionary, path_index: int) -> void:
 	var room := {
 		"chunk": pl.chunk,
 		"role": pl.role,
@@ -86,7 +96,7 @@ func _setup_room(pl: Dictionary) -> void:
 	add_child(area)
 
 	if pl.role == 1: # COMBAT
-		_spawn_enemies(room, pl)
+		_spawn_enemies(room, pl, path_index)
 		_make_blockers(room, pl)
 		_make_lock_trigger(room)
 	elif pl.role == 4: # BOSS
@@ -95,18 +105,41 @@ func _setup_room(pl: Dictionary) -> void:
 		_make_treasure(pl)
 
 
-func _spawn_enemies(room: Dictionary, pl: Dictionary) -> void:
-	var budget: int = pl.chunk.difficulty_budget
-	for marker in pl.chunk.spawn_points(&"E"):
-		if budget < 2:
-			break
-		var enemy := WalkerScene.instantiate()
-		add_child(enemy)
-		# lift off the marker: markers can sit a pixel inside platforms
-		enemy.global_position = marker.global_position + Vector2(0, -12)
-		enemy.set(&"room_bounds", room.bounds) # hard confinement to this room
-		room.enemies.append(enemy)
-		budget -= 2
+## Budgeted archetype spawning (M4): budget = chunk budget + distance from
+## start (deeper rooms are harder). Map letters hint types (R/F/H exact,
+## E = random affordable pick); unaffordable hints downgrade to a rusher.
+func _spawn_enemies(room: Dictionary, pl: Dictionary, path_index: int) -> void:
+	var budget: int = pl.chunk.difficulty_budget + path_index / 2
+	for kind in [&"E", &"R", &"F", &"H"]:
+		for marker in pl.chunk.spawn_points(kind):
+			var pick: StringName = kind
+			if kind == &"E":
+				pick = _pick_affordable(budget)
+			elif ENEMY_COST[kind] > budget:
+				pick = &"E" if ENEMY_COST[&"E"] <= budget else &""
+			if pick == &"":
+				continue
+			_spawn_enemy(room, pick, marker.global_position)
+			budget -= ENEMY_COST[pick]
+
+
+func _pick_affordable(budget: int) -> StringName:
+	var options: Array = []
+	for kind in RANDOM_POOL:
+		if ENEMY_COST[kind] <= budget:
+			options.append(kind)
+	if options.is_empty():
+		return &""
+	return options[_rng.randi() % options.size()]
+
+
+func _spawn_enemy(room: Dictionary, kind: StringName, pos: Vector2) -> void:
+	var enemy = ENEMY_SCENES[kind].instantiate()
+	add_child(enemy)
+	# lift off the marker: markers can sit a pixel inside platforms
+	enemy.global_position = pos + Vector2(0, -12)
+	enemy.set(&"room_bounds", room.bounds) # hard confinement to this room
+	room.enemies.append(enemy)
 
 
 ## Lock trigger sits one tile INSIDE the room bounds: the player must be
