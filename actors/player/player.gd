@@ -31,7 +31,7 @@ const PlaceholderAnims = preload("res://actors/player/placeholder_anims.gd")
 @export var roll_speed := 170.0
 @export var roll_duration := 0.32
 @export var roll_cancel_window := 0.10  # last N seconds can cancel into jump/move
-@export var roll_iframe_tail := 0.12    # i-frames outlast the roll by this much
+@export var roll_iframe_tail := 0.18    # i-frames outlast the roll by this much
 
 @export_group("Wall")
 @export var wall_slide_speed := 40.0

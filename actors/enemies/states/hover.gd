@@ -2,16 +2,20 @@ extends "res://actors/player/state_machine/state.gd"
 ## Hover — the flyer's approach: drift to a hovering offset above-beside the
 ## target (with a gentle bob), then drop into Telegraph when close.
 ## The hover point is clamped inside the room so corners/ceilings can't
-## trap the flyer; a watchdog forces the attack if it still can't progress.
+## trap the flyer; a watchdog forces the attack if it still can't progress —
+## measured by ACTUAL movement (a wedged flyer commands full velocity into
+## the wall, so watching velocity never fires).
 
 var _t := 0.0
 var _stuck := 0.0
+var _last_pos := Vector2.ZERO
 
 
 func enter() -> void:
 	tint("#b39ddb")
 	_t = 0.0
 	_stuck = 0.0
+	_last_pos = actor.global_position
 
 
 func physics_update(delta: float) -> void:
@@ -29,8 +33,10 @@ func physics_update(delta: float) -> void:
 	var desired = Vector2.ZERO if to.length() < 6.0 else to.normalized() * actor.move_speed
 	actor.velocity = actor.velocity.move_toward(desired, 300.0 * delta)
 
-	# watchdog: wedged in a corner with no progress -> attack anyway
-	if to.length() > 30.0 and actor.velocity.length() < 5.0:
+	# watchdog: wedged in a corner with no real progress -> attack anyway
+	var moved: float = actor.global_position.distance_to(_last_pos)
+	_last_pos = actor.global_position
+	if to.length() > 30.0 and moved < 0.3:
 		_stuck += delta
 	else:
 		_stuck = 0.0

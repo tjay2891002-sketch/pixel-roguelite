@@ -10,7 +10,7 @@ signal state_changed(state_name: StringName)
 @export var move_speed := 30.0
 @export var patrol_range := 40.0
 @export var attack_range := 16.0
-@export var telegraph_time := 0.40
+@export var telegraph_time := 0.50
 @export var attack_active_time := 0.12
 @export var attack_recovery_time := 0.4
 @export var swipe_damage := 6

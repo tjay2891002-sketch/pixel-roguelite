@@ -118,7 +118,7 @@ func _physics_process(_delta: float) -> bool:
 		# --- B: walker swipe lands
 		114:
 			_teleport(_walker.global_position + Vector2(-12, 0))
-		155:
+		158:
 			_check(_player.health.hp == 24, "walker swipe deals 6 (30->24)", "hp=%d" % _player.health.hp)
 			_watch_roll = true
 		# --- C: roll through the next swipe
