@@ -38,6 +38,13 @@ shape = SubResource("RectangleShape2D_body")
 color = Color(0.9, 0.55, 0.5, 1)
 polygon = PackedVector2Array(-5, -9, 5, -9, 5, 9, -5, 9)
 
+[node name="SlashPivot" type="Node2D" parent="."]
+
+[node name="SlashArc" type="Polygon2D" parent="SlashPivot"]
+visible = false
+color = Color(1, 0.5, 0.45, 0.75)
+polygon = PackedVector2Array(2, -10, 13, -8, 16, -3, 16, 3, 13, 8, 2, 10, 7, 0)
+
 [node name="HpLabel" type="Label" parent="."]
 offset_left = -8.0
 offset_top = -30.0

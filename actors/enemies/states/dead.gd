@@ -13,6 +13,9 @@ func enter() -> void:
 		actor.hitbox.deactivate()
 	if actor.has_node("Hurtbox"):
 		actor.get_node("Hurtbox").monitoring = false
+	var arc = actor.get_node_or_null("SlashPivot/SlashArc")
+	if arc:
+		arc.visible = false
 
 
 func physics_update(delta: float) -> void:

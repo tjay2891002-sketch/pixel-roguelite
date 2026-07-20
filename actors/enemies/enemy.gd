@@ -38,6 +38,9 @@ func _ready() -> void:
 	add_to_group(&"enemy")
 	if hitbox:
 		hitbox.position.x = absf(hitbox.position.x) * facing
+	var pivot := get_node_or_null("SlashPivot")
+	if pivot:
+		pivot.scale.x = facing
 	if detection:
 		detection.body_entered.connect(_on_detection_entered)
 		detection.body_exited.connect(_on_detection_exited)
@@ -62,6 +65,9 @@ func set_facing(dir: int) -> void:
 	visual.scale.x = facing
 	if hitbox:
 		hitbox.position.x = absf(hitbox.position.x) * facing
+	var pivot := get_node_or_null("SlashPivot")
+	if pivot:
+		pivot.scale.x = facing
 
 
 func face_target() -> void:

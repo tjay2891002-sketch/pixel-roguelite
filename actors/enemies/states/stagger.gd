@@ -10,6 +10,10 @@ func enter() -> void:
 	_timer = 0.6
 	if actor.hitbox:
 		actor.hitbox.deactivate()
+	# hide the swipe arc if the stagger interrupted a telegraph/strike
+	var arc = actor.get_node_or_null("SlashPivot/SlashArc")
+	if arc:
+		arc.visible = false
 
 
 func physics_update(delta: float) -> void:
