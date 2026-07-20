@@ -14,6 +14,7 @@ var stage_index := 0
 var player # untyped (see state.gd convention)
 var _camera: Camera2D
 var _rooms: Array = [] # per-placement runtime records
+var _pending_blockers: Array = [] # blockers waiting for the player to step clear
 var _state_name := "Idle"
 
 @onready var _debug_label: Label = $HUD/DebugLabel
@@ -26,6 +27,13 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
+	# deferred door-blocker enables: a blocker must never close ON the player
+	if not _pending_blockers.is_empty():
+		for blocker in _pending_blockers.duplicate():
+			if not _blocker_overlaps_player(blocker):
+				blocker.shape.disabled = false
+				blocker.vis.visible = true
+				_pending_blockers.erase(blocker)
 	if player and _camera:
 		_camera.global_position = player.global_position.round()
 		_debug_label.text = "state: %s   hp: %d   stage: %d   fps: %d" % [
@@ -88,7 +96,9 @@ func _spawn_enemies(room: Dictionary, pl: Dictionary) -> void:
 			break
 		var enemy := WalkerScene.instantiate()
 		add_child(enemy)
-		enemy.global_position = marker.global_position
+		# lift off the marker: markers can sit a pixel inside platforms
+		enemy.global_position = marker.global_position + Vector2(0, -12)
+		enemy.set(&"room_bounds", room.bounds) # hard confinement to this room
 		room.enemies.append(enemy)
 		budget -= 2
 
@@ -102,13 +112,13 @@ func _make_blockers(room: Dictionary, pl: Dictionary) -> void:
 		blocker.collision_mask = 0
 		var shape := CollisionShape2D.new()
 		var rect := RectangleShape2D.new()
-		rect.size = Vector2(32, 32)
+		rect.size = Vector2(48, 48) # covers the 3-tall door + seam
 		shape.shape = rect
 		shape.disabled = true
 		blocker.add_child(shape)
 		var vis := Polygon2D.new()
 		vis.polygon = PackedVector2Array([
-			Vector2(-16, -16), Vector2(16, -16), Vector2(16, 16), Vector2(-16, 16)])
+			Vector2(-24, -24), Vector2(24, -24), Vector2(24, 24), Vector2(-24, 24)])
 		vis.color = Color(0.8, 0.3, 0.3, 0.6)
 		vis.visible = false
 		blocker.add_child(vis)
@@ -172,8 +182,20 @@ func _apply_camera_bounds(rect: Rect2) -> void:
 
 func _set_room_locked(room: Dictionary, locked: bool) -> void:
 	for blocker in room.blockers:
-		blocker.shape.disabled = not locked
-		blocker.vis.visible = locked
+		if locked and _blocker_overlaps_player(blocker):
+			# player is standing in the doorway — close it once they step clear
+			_pending_blockers.append(blocker)
+		else:
+			blocker.shape.disabled = not locked
+			blocker.vis.visible = locked
+
+
+func _blocker_overlaps_player(blocker: Dictionary) -> bool:
+	if player == null:
+		return false
+	var brect := Rect2(blocker.body.global_position - Vector2(24, 24), Vector2(48, 48))
+	var prect := Rect2(player.global_position - Vector2(5, 11), Vector2(10, 22))
+	return brect.intersects(prect)
 
 
 func _setup_player(layout: Array) -> void:

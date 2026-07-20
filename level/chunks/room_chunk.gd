@@ -121,11 +121,11 @@ func _build() -> void:
 
 
 ## Generation-time: seal an unused door so the room stays enclosed.
+## Doors are 3 tiles tall (marked cell + 2 open below) — seal all three.
 func seal_connector(connector: RoomConnector) -> void:
 	var layer := get_node_or_null("TileMapLayer")
 	if layer == null:
 		return
 	var cell := Vector2i(connector.position / TILE_SIZE)
-	layer.set_cell(cell, 0, TILES.WALL)
-	# and the cell below (the bottom half of the 2-tall door)
-	layer.set_cell(cell + Vector2i(0, 1), 0, TILES.WALL)
+	for i in 3:
+		layer.set_cell(cell + Vector2i(0, i), 0, TILES.WALL)

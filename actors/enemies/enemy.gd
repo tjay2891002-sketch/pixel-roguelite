@@ -21,6 +21,9 @@ signal state_changed(state_name: StringName)
 var facing := -1
 var home_x := 0.0
 var target: Node2D = null # detected player
+## Hard confinement: the stage sets this at spawn so enemies can never leave
+## their room (patrol/chase/knockback all respect it). Empty = unconfined.
+var room_bounds := Rect2()
 
 ## state_machine is untyped on purpose (same convention as the player).
 var state_machine
@@ -52,6 +55,9 @@ func _physics_process(delta: float) -> void:
 	state_machine.physics_update(delta)
 	velocity.y = minf(velocity.y + gravity * delta, 320.0)
 	move_and_slide()
+	if room_bounds.has_area():
+		global_position.x = clampf(global_position.x, room_bounds.position.x + 8.0, room_bounds.end.x - 8.0)
+		global_position.y = clampf(global_position.y, room_bounds.position.y + 10.0, room_bounds.end.y - 10.0)
 
 
 func _process(_delta: float) -> void:
