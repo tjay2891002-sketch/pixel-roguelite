@@ -1,38 +1,39 @@
 ## Placeholder animation builder — crude greybox attack clips, built in code
 ## so they're version-controllable and trivially replaced by real art later.
 ##
-## Each clip's Call Method track fires _on_swing_active_start() (hitbox on +
-## lunge) and hitbox_deactivate() at the active frames — the architecture's
-## "hitboxes from animation Call Method tracks, never timers" rule (§2/§3).
+## Each chain step is VISUALLY DISTINCT (docs §3 wants data-driven steps;
+## greybox proves the variety pipeline):
+##   attack_1: overhand slash, blue-white, medium
+##   attack_2: reverse/backhand slash, green tint, fast
+##   attack_3: forward thrust, amber, slow + big
+## Call Method tracks fire _on_swing_active_start() (hitbox on + lunge) and
+## hitbox_deactivate() at the active frames — never timers. Timings mirror
+## data/weapons/sword.tres; keep in sync while in greybox.
 ## Preloaded by player.gd as a const; intentionally NO class_name.
 
-const SLASH_ROT_START := -1.2
-const SLASH_ROT_END := 1.2
+const ARC_PATH := ^"SlashPivot/SlashArc"
 
 
 static func build(anim_player: AnimationPlayer) -> void:
 	var lib := AnimationLibrary.new()
-	# (length, active_start, active_end) — mirrors data/weapons/sword.tres
-	# cancel windows; keep in sync while in greybox.
-	lib.add_animation(&"attack_1", _swing(0.35, 0.10, 0.22))
-	lib.add_animation(&"attack_2", _swing(0.30, 0.08, 0.18))
-	lib.add_animation(&"attack_3", _swing(0.45, 0.14, 0.26))
+	# (length, active_start, active_end)
+	lib.add_animation(&"attack_1", _slash(0.35, 0.10, 0.22, -1.2, 1.2, Color(0.95, 0.95, 1.0, 0.75)))
+	lib.add_animation(&"attack_2", _slash(0.28, 0.07, 0.16, 1.2, -1.2, Color(0.85, 1.0, 0.9, 0.75)))
+	lib.add_animation(&"attack_3", _thrust(0.48, 0.16, 0.28, Color(1.0, 0.85, 0.6, 0.85)))
 	anim_player.add_animation_library(&"", lib)
 
 
-static func _swing(length: float, active_start: float, active_end: float) -> Animation:
+## Shared track skeleton: color, visibility window, hitbox call tracks.
+static func _base(length: float, active_start: float, active_end: float, color: Color) -> Animation:
 	var anim := Animation.new()
 	anim.length = length
 
-	# Slash arc sweeps across the body during the active frames.
-	var rot := anim.add_track(Animation.TYPE_VALUE)
-	anim.track_set_path(rot, ^"SlashArc:rotation")
-	anim.track_insert_key(rot, 0.0, SLASH_ROT_START)
-	anim.track_insert_key(rot, active_end, SLASH_ROT_END)
-	anim.track_insert_key(rot, length, SLASH_ROT_END)
+	var mod := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(mod, NodePath(String(ARC_PATH) + ":modulate"))
+	anim.track_insert_key(mod, 0.0, color)
 
 	var vis := anim.add_track(Animation.TYPE_VALUE)
-	anim.track_set_path(vis, ^"SlashArc:visible")
+	anim.track_set_path(vis, NodePath(String(ARC_PATH) + ":visible"))
 	anim.value_track_set_update_mode(vis, Animation.UPDATE_DISCRETE)
 	anim.track_insert_key(vis, 0.0, true)
 	anim.track_insert_key(vis, active_end + 0.03, false)
@@ -41,4 +42,33 @@ static func _swing(length: float, active_start: float, active_end: float) -> Ani
 	anim.track_set_path(calls, ^".")
 	anim.track_insert_key(calls, active_start, {"method": &"_on_swing_active_start", "args": []})
 	anim.track_insert_key(calls, active_end, {"method": &"hitbox_deactivate", "args": []})
+	return anim
+
+
+## Steps 1 & 2: the arc sweeps across the body (opposite directions).
+static func _slash(length: float, active_start: float, active_end: float, rot_from: float, rot_to: float, color: Color) -> Animation:
+	var anim := _base(length, active_start, active_end, color)
+	var rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(rot, NodePath(String(ARC_PATH) + ":rotation"))
+	anim.track_insert_key(rot, 0.0, rot_from)
+	anim.track_insert_key(rot, active_end, rot_to)
+	anim.track_insert_key(rot, length, rot_to)
+	var pos := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(pos, NodePath(String(ARC_PATH) + ":position"))
+	anim.track_insert_key(pos, 0.0, Vector2.ZERO)
+	return anim
+
+
+## Step 3: the arc holds still and stabs forward.
+static func _thrust(length: float, active_start: float, active_end: float, color: Color) -> Animation:
+	var anim := _base(length, active_start, active_end, color)
+	var rot := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(rot, NodePath(String(ARC_PATH) + ":rotation"))
+	anim.track_insert_key(rot, 0.0, 0.0)
+	var pos := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(pos, NodePath(String(ARC_PATH) + ":position"))
+	anim.track_insert_key(pos, 0.0, Vector2(-4, 0))
+	anim.track_insert_key(pos, active_start, Vector2(-4, 0))
+	anim.track_insert_key(pos, active_end, Vector2(14, 0))
+	anim.track_insert_key(pos, length, Vector2(14, 0))
 	return anim

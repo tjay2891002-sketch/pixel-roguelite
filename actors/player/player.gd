@@ -61,6 +61,12 @@ var attack_step_index := 0
 var current_hit_info: Dictionary = {}
 var current_lunge := 0.0
 
+## Combo memory: after a swing ends, a press within COMBO_MEMORY_MS continues
+## the chain from combo_step (Dead Cells-style forgiving combos).
+const COMBO_MEMORY_MS := 250
+var combo_step := 0
+var combo_reset_at_msec := 0
+
 ## state_machine is untyped on purpose (see state.gd header comment).
 var state_machine
 
@@ -201,7 +207,17 @@ func hitbox_deactivate() -> void:
 	hitbox.deactivate()
 
 
+## Which chain step a new Attack starts from: combo_step if we're inside the
+## combo memory window, else 0.
+func begin_attack_index() -> int:
+	if combo_step > 0 and combo_step < weapon.steps.size() \
+			and Time.get_ticks_msec() < combo_reset_at_msec:
+		return combo_step
+	return 0
+
+
 func _on_poise_broken() -> void:
+	combo_step = 0 # getting staggered drops the combo
 	state_machine.change_state(&"Hurt")
 
 

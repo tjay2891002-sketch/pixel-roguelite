@@ -16,7 +16,7 @@ func physics_update(delta: float) -> void:
 	elif not player.is_on_floor():
 		machine.change_state(&"Fall")
 	elif Input.is_action_just_pressed(&"attack"):
-		player.attack_step_index = 0
+		player.attack_step_index = player.begin_attack_index()
 		machine.change_state(&"Attack")
 	elif Input.is_action_just_pressed(&"roll"):
 		machine.change_state(&"Roll")

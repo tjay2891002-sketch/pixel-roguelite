@@ -18,26 +18,26 @@ roll_cancel_start = 0.18
 [sub_resource type="Resource" id="AttackStep_2"]
 script = ExtResource("2")
 animation = &"attack_2"
-damage = 8
+damage = 9
 poise_damage = 8.0
 knockback = Vector2(60, -20)
 lunge = 80.0
 hitbox_size = Vector2(16, 12)
 hitbox_offset = Vector2(10, 0)
-chain_window_start = 0.10
-roll_cancel_start = 0.14
+chain_window_start = 0.08
+roll_cancel_start = 0.12
 
 [sub_resource type="Resource" id="AttackStep_3"]
 script = ExtResource("2")
 animation = &"attack_3"
 damage = 12
 poise_damage = 14.0
-knockback = Vector2(120, -40)
-lunge = 120.0
+knockback = Vector2(140, -40)
+lunge = 130.0
 hitbox_size = Vector2(20, 12)
 hitbox_offset = Vector2(12, 0)
-chain_window_start = 0.12
-roll_cancel_start = 0.20
+chain_window_start = 0.14
+roll_cancel_start = 0.22
 
 [resource]
 script = ExtResource("1")

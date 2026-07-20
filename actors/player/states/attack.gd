@@ -16,6 +16,9 @@ func enter() -> void:
 	_step = player.weapon.steps[player.attack_step_index]
 	_t = 0.0
 	_chain_buffered = false
+	# Slash visuals mirror the facing (SlashPivot flips; the hitbox is
+	# configured from the same facing below — direction is never visual-only).
+	player.get_node("SlashPivot").scale.x = player.facing
 	_configure_hitbox()
 	player.anim_player.play(_step.animation)
 	# Force the first evaluation NOW: without this, a freshly played clip's
@@ -30,7 +33,7 @@ func enter() -> void:
 func exit() -> void:
 	player.hitbox_deactivate()
 	player.anim_player.stop()
-	player.get_node("SlashArc").visible = false
+	player.get_node("SlashPivot/SlashArc").visible = false
 
 
 func handle_input(event: InputEvent) -> void:
@@ -50,6 +53,7 @@ func physics_update(delta: float) -> void:
 
 	if Input.is_action_just_pressed(&"roll") and _t >= _duration - _step.roll_cancel_start:
 		player.attack_step_index = 0
+		player.combo_step = 0 # rolling drops the combo
 		machine.change_state(&"Roll")
 		return
 
@@ -64,16 +68,27 @@ func physics_update(delta: float) -> void:
 			machine.restart() # re-enter Attack with the new step (same-state
 			                  # change_state would no-op and never reset _t)
 		else:
+			# pressed at the end of the final step — combo complete, restart fresh
+			_end_combo(0)
 			player.attack_step_index = 0
 			machine.change_state(&"Run" if player.horizontal_input() != 0.0 else &"Idle")
 		return
 
 	if _t >= _duration:
+		# Swing finished: brief combo memory — a press within COMBO_MEMORY_MS
+		# continues the chain from the next step instead of restarting at 1.
+		var next_index: int = player.attack_step_index + 1
+		_end_combo(next_index if next_index < player.weapon.steps.size() else 0)
 		player.attack_step_index = 0
 		if player.is_on_floor():
 			machine.change_state(&"Run" if player.horizontal_input() != 0.0 else &"Idle")
 		else:
 			machine.change_state(&"Fall")
+
+
+func _end_combo(next_step: int) -> void:
+	player.combo_step = next_step
+	player.combo_reset_at_msec = Time.get_ticks_msec() + player.COMBO_MEMORY_MS
 
 
 func _configure_hitbox() -> void:

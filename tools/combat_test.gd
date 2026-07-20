@@ -99,18 +99,20 @@ func _physics_process(_delta: float) -> bool:
 		34:
 			_tap(&"attack")
 		56:
-			_check(_dummy.health.hp == 12, "3-hit chain deals 28 (40->12)", "hp=%d" % _dummy.health.hp)
+			_check(_dummy.health.hp == 11, "3-hit chain deals 8+9+12 (40->11)", "hp=%d" % _dummy.health.hp)
 			_check(_dummy.state_machine.current.name == &"Stagger", "chain breaks poise => Stagger", "state=%s" % _dummy.state_machine.current.name)
 		62:
-			_teleport(Vector2(_dummy.global_position.x - 12, 139)) # re-approach: knockback slid it away
+			# attack LEFT toward the dummy: proves hitbox direction follows facing
+			_teleport(Vector2(_dummy.global_position.x + 12, 139))
+			_player.set_facing(-1)
 			_tap(&"attack")
+		74:
+			_check(_dummy.health.hp == 3, "left-facing attack connects (11->3)", "hp=%d" % _dummy.health.hp)
 		80:
 			_teleport(Vector2(_dummy.global_position.x - 12, 139))
+			_player.set_facing(1)
 			_tap(&"attack")
-		98:
-			_teleport(Vector2(_dummy.global_position.x - 12, 139))
-			_tap(&"attack")
-		112:
+		96:
 			_check(_enemy_killed, "dummy dies => enemy_killed emitted", "hp=%d" % _dummy.health.hp)
 		# --- B: walker swipe lands
 		114:
