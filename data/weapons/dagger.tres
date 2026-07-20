@@ -1,0 +1,46 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://combat/weapon_data.gd" id="1"]
+[ext_resource type="Script" path="res://combat/attack_step.gd" id="2"]
+
+[sub_resource type="Resource" id="AttackStep_1"]
+script = ExtResource("2")
+animation = &"dagger_1"
+damage = 5
+poise_damage = 4.0
+knockback = Vector2(40, -10)
+lunge = 70.0
+hitbox_size = Vector2(14, 10)
+hitbox_offset = Vector2(9, 0)
+chain_window_start = 0.08
+roll_cancel_start = 0.10
+
+[sub_resource type="Resource" id="AttackStep_2"]
+script = ExtResource("2")
+animation = &"dagger_2"
+damage = 5
+poise_damage = 4.0
+knockback = Vector2(40, -10)
+lunge = 60.0
+hitbox_size = Vector2(14, 10)
+hitbox_offset = Vector2(9, 0)
+chain_window_start = 0.07
+roll_cancel_start = 0.09
+
+[sub_resource type="Resource" id="AttackStep_3"]
+script = ExtResource("2")
+animation = &"dagger_3"
+damage = 9
+poise_damage = 8.0
+knockback = Vector2(90, -25)
+lunge = 110.0
+hitbox_size = Vector2(18, 10)
+hitbox_offset = Vector2(11, 0)
+chain_window_start = 0.10
+roll_cancel_start = 0.14
+
+[resource]
+script = ExtResource("1")
+id = &"dagger"
+display_name = "Dagger"
+steps = Array[Resource]([SubResource("AttackStep_1"), SubResource("AttackStep_2"), SubResource("AttackStep_3")])

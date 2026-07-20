@@ -2,13 +2,10 @@
 ## so they're version-controllable and trivially replaced by real art later.
 ##
 ## Each chain step is VISUALLY DISTINCT (docs §3 wants data-driven steps;
-## greybox proves the variety pipeline):
-##   attack_1: overhand slash, blue-white, medium
-##   attack_2: reverse/backhand slash, green tint, fast
-##   attack_3: forward thrust, amber, slow + big
-## Call Method tracks fire _on_swing_active_start() (hitbox on + lunge) and
-## hitbox_deactivate() at the active frames — never timers. Timings mirror
-## data/weapons/sword.tres; keep in sync while in greybox.
+## greybox proves the variety pipeline): sword = slash / reverse / thrust,
+## dagger = faster lighter variants. Call Method tracks fire
+## _on_swing_active_start() (hitbox on + lunge) and hitbox_deactivate() at
+## the active frames — never timers. Timings mirror data/weapons/*.tres.
 ## Preloaded by player.gd as a const; intentionally NO class_name.
 
 const ARC_PATH := ^"SlashPivot/SlashArc"
@@ -16,10 +13,13 @@ const ARC_PATH := ^"SlashPivot/SlashArc"
 
 static func build(anim_player: AnimationPlayer) -> void:
 	var lib := AnimationLibrary.new()
-	# (length, active_start, active_end)
-	lib.add_animation(&"attack_1", _slash(0.35, 0.10, 0.22, -1.2, 1.2, Color(0.95, 0.95, 1.0, 0.75)))
-	lib.add_animation(&"attack_2", _slash(0.28, 0.07, 0.16, 1.2, -1.2, Color(0.85, 1.0, 0.9, 0.75)))
-	lib.add_animation(&"attack_3", _thrust(0.48, 0.16, 0.28, Color(1.0, 0.85, 0.6, 0.85)))
+	# (length, active_start, active_end) — mirrors data/weapons/*.tres
+	lib.add_animation(&"sword_1", _slash(0.35, 0.10, 0.22, -1.2, 1.2, Color(0.95, 0.95, 1.0, 0.75)))
+	lib.add_animation(&"sword_2", _slash(0.28, 0.07, 0.16, 1.2, -1.2, Color(0.85, 1.0, 0.9, 0.75)))
+	lib.add_animation(&"sword_3", _thrust(0.48, 0.16, 0.28, Color(1.0, 0.85, 0.6, 0.85)))
+	lib.add_animation(&"dagger_1", _slash(0.24, 0.06, 0.14, -1.2, 1.2, Color(0.75, 0.9, 1.0, 0.7)))
+	lib.add_animation(&"dagger_2", _slash(0.20, 0.05, 0.12, 1.2, -1.2, Color(0.85, 0.95, 1.0, 0.7)))
+	lib.add_animation(&"dagger_3", _thrust(0.30, 0.09, 0.20, Color(1.0, 0.95, 0.7, 0.8)))
 	anim_player.add_animation_library(&"", lib)
 
 

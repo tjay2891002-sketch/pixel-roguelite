@@ -1,8 +1,10 @@
 extends Node
 ## Juice — the combat feel layer (docs/ARCHITECTURE.md §3): hitstop, trauma
-## screen shake, hit particles, victim flash. Subscribes to EventBus.hit_landed
-## and is fully decoupled: remove this node and the game plays identically,
-## it just feels dead.
+## screen shake, hit particles, victim flash, hit SFX. Subscribes to
+## EventBus.hit_landed and is fully decoupled: remove this node and the game
+## plays identically, it just feels dead.
+
+const SFX := preload("res://fx/sfx_builder.gd")
 
 const HITSTOP_SCALE := 0.05
 const HITSTOP_MS := 80.0
@@ -20,11 +22,15 @@ var _next_particle := 0
 var _noise := FastNoiseLite.new()
 var _noise_t := 0.0
 
+## Options: screenshake can be toggled (pause menu; persisted in SaveStub).
+var shake_enabled := true
+
 
 func _ready() -> void:
 	# ALWAYS: hitstop restore must keep ticking while time_scale is near zero.
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	EventBus.hit_landed.connect(_on_hit_landed)
+	shake_enabled = bool(SaveStub.data.get("shake", true))
 	for i in PARTICLE_POOL_SIZE:
 		var burst := _make_burst()
 		_particles.append(burst)
@@ -42,7 +48,7 @@ func _process(delta: float) -> void:
 	if _camera:
 		_trauma = maxf(_trauma - SHAKE_DECAY * delta, 0.0)
 		_noise_t += delta * 30.0
-		if _trauma > 0.0:
+		if _trauma > 0.0 and shake_enabled:
 			var magnitude := SHAKE_MAX_OFFSET * _trauma * _trauma
 			_camera.offset = Vector2(
 				_noise.get_noise_1d(_noise_t) * magnitude,
@@ -61,6 +67,9 @@ func _on_hit_landed(hit_info: Dictionary) -> void:
 	_hitstop_until_msec = Time.get_ticks_msec() + (KILL_HITSTOP_MS if killed else HITSTOP_MS)
 
 	_trauma = minf(_trauma + SHAKE_TRAUMA_PER_HIT, 1.0)
+
+	# sfx — thud on hit, heavier on kill
+	AudioBus.play_sfx(SFX.kill() if killed else SFX.hit(), hit_info.get(&"hit_position", Vector2.ZERO))
 
 	# particle burst at the impact point
 	var burst := _particles[_next_particle]

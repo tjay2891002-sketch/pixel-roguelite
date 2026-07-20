@@ -6,8 +6,19 @@ extends Node2D
 const PlayerScene := preload("res://actors/player/player.tscn")
 const Generator := preload("res://level/generator/stage_generator.gd")
 const GreyboxBiome := preload("res://data/biomes/greybox.tres")
+const SFX := preload("res://fx/sfx_builder.gd")
+const ShopStand := preload("res://level/shop_stand.tscn")
 
 const TILE := 16
+const KEY_R := 82
+const KEY_Q := 81
+const KEY_S := 83
+const KEY_ESCAPE := 4194305
+const KEY_F3 := 4194334
+
+## Title shows once per app launch (survives scene reloads; skipped in
+## headless tests where current_scene is null).
+static var _title_shown_once := false
 
 ## Spawn archetypes by map letter (M4). E = random pick from the pool.
 const ENEMY_SCENES := {
@@ -28,12 +39,28 @@ var _state_name := "Idle"
 var _rng: RandomNumberGenerator
 
 @onready var _debug_label: Label = $HUD/DebugLabel
+@onready var _hp_fg: ColorRect = $HUD/HpFg
+@onready var _info_label: Label = $HUD/InfoLabel
+@onready var _title_overlay: CanvasLayer = $TitleOverlay
+@onready var _death_overlay: CanvasLayer = $DeathOverlay
+@onready var _death_text: Label = $DeathOverlay/DeathText
+@onready var _pause_overlay: CanvasLayer = $PauseOverlay
+@onready var _pause_text: Label = $PauseOverlay/PauseText
+@onready var _juice: Node = $Juice
 
 
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS # keep input alive while paused
 	RunManager.start_run()
 	EventBus.enemy_killed.connect(_on_enemy_killed)
+	EventBus.player_died.connect(_on_player_died)
 	_build_stage()
+	if not _title_shown_once:
+		await get_tree().process_frame
+		if get_tree().current_scene == self:
+			_title_shown_once = true
+			_title_overlay.visible = true
+			get_tree().paused = true
 
 
 func _process(_delta: float) -> void:
@@ -46,14 +73,56 @@ func _process(_delta: float) -> void:
 				_pending_blockers.erase(blocker)
 	if player and _camera:
 		_camera.global_position = player.global_position.round()
-		_debug_label.text = "state: %s   hp: %d   cells: %d   stage: %d   fps: %d" % [
-			_state_name, player.health.hp, int(SaveStub.data.get("currency", 0)),
-			stage_index + 1, Engine.get_frames_per_second()]
+		_hp_fg.offset_right = 9.0 + maxf(player.health.hp * 2.0, 0.0)
+		_info_label.text = "cells: %d   stage: %d   %s" % [
+			int(SaveStub.data.get("currency", 0)), stage_index + 1, player.weapon.display_name]
+		_debug_label.text = "state: %s   hp: %d   fps: %d" % [
+			_state_name, player.health.hp, Engine.get_frames_per_second()]
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not event is InputEventKey or not event.pressed:
+		return
+	var key: int = event.physical_keycode
+	if _title_overlay.visible:
+		_title_overlay.visible = false
+		get_tree().paused = false
+		return
+	if _death_overlay.visible:
+		if key == KEY_R:
+			get_tree().paused = false
+			get_tree().reload_current_scene()
+		return
+	if _pause_overlay.visible:
+		match key:
+			KEY_R, KEY_ESCAPE:
+				_toggle_pause()
+			KEY_S:
+				_juice.shake_enabled = not _juice.shake_enabled
+				SaveStub.data["shake"] = _juice.shake_enabled
+				SaveStub.flush()
+				_update_pause_text()
+			KEY_Q:
+				get_tree().paused = false
+				get_tree().reload_current_scene()
+		return
+	if key == KEY_ESCAPE:
+		_toggle_pause()
+	elif key == KEY_F3:
+		_debug_label.visible = not _debug_label.visible
 
 
 func _build_stage() -> void:
 	_rng = RunManager.stage_rng(stage_index)
-	var layout := Generator.generate(GreyboxBiome, _rng)
+	# difficulty curve: from stage 3, an extra combat room per stage before
+	# the boss room (duplicate + copy the array so the base config is untouched)
+	var config: BiomeConfig = GreyboxBiome
+	if stage_index >= 2:
+		config = GreyboxBiome.duplicate()
+		config.path_roles = GreyboxBiome.path_roles.duplicate()
+		for i in stage_index - 1:
+			config.path_roles.insert(config.path_roles.size() - 1, 1)
+	var layout := Generator.generate(config, _rng)
 	if layout.is_empty():
 		push_error("[Stage] generation failed; nothing to build")
 		return
@@ -101,7 +170,9 @@ func _setup_room(pl: Dictionary, path_index: int) -> void:
 		_make_lock_trigger(room)
 	elif pl.role == 4: # BOSS
 		_make_boss_door(pl)
-	if pl.role in [2, 3, 5]: # SHOP / TREASURE / BRANCH
+	if pl.role == 2: # SHOP
+		_make_shop(pl)
+	elif pl.role in [3, 5]: # TREASURE / BRANCH
 		_make_treasure(pl)
 
 
@@ -109,7 +180,8 @@ func _setup_room(pl: Dictionary, path_index: int) -> void:
 ## start (deeper rooms are harder). Map letters hint types (R/F/H exact,
 ## E = random affordable pick); unaffordable hints downgrade to a rusher.
 func _spawn_enemies(room: Dictionary, pl: Dictionary, path_index: int) -> void:
-	var budget: int = pl.chunk.difficulty_budget + path_index / 2
+	# budget: chunk budget + distance from start + stage depth (difficulty curve)
+	var budget: int = pl.chunk.difficulty_budget + path_index / 2 + stage_index / 2
 	for kind in [&"E", &"R", &"F", &"H"]:
 		for marker in pl.chunk.spawn_points(kind):
 			var pick: StringName = kind
@@ -160,8 +232,27 @@ func _make_lock_trigger(room: Dictionary) -> void:
 	add_child(area)
 
 
+## Shop room: one stand per T marker — heal first, dagger second.
+func _make_shop(pl: Dictionary) -> void:
+	var markers = pl.chunk.spawn_points(&"T")
+	var offers := [
+		[&"heal", 10, "Heal 10HP"],
+		[&"dagger", 15, "Dagger"],
+	]
+	var floor_top: float = pl.pos.y + (pl.chunk.cell_size().y - 1) * TILE
+	for i in mini(offers.size(), markers.size()):
+		var stand := ShopStand.instantiate()
+		stand.offer = offers[i][0]
+		stand.cost = offers[i][1]
+		stand.stand_text = offers[i][2]
+		add_child(stand)
+		# stands sit on the floor below their marker, reachable by the player
+		stand.global_position = Vector2(markers[i].global_position.x, floor_top - 5.0)
+
+
 ## Treasure cells (placeholder currency pickup; the shop UI arrives in M5).
 func _make_treasure(pl: Dictionary) -> void:
+	var floor_top: float = pl.pos.y + (pl.chunk.cell_size().y - 1) * TILE
 	for marker in pl.chunk.spawn_points(&"T"):
 		var pickup := Area2D.new()
 		pickup.collision_layer = 128 # layer 8: pickup
@@ -177,7 +268,7 @@ func _make_treasure(pl: Dictionary) -> void:
 		pickup.add_child(vis)
 		pickup.add_to_group(&"pickup")
 		add_child(pickup)
-		pickup.global_position = marker.global_position
+		pickup.global_position = Vector2(marker.global_position.x, floor_top - 4.0)
 		pickup.body_entered.connect(_on_treasure_collected.bind(pickup))
 
 
@@ -252,6 +343,7 @@ func _on_enemy_killed(enemy: Node2D) -> void:
 				room.cleared = true
 				_set_room_locked(room, false)
 				EventBus.room_cleared.emit(room.chunk)
+				AudioBus.play_sfx(SFX.unlock(), player.global_position)
 			return
 
 
@@ -259,9 +351,33 @@ func _on_boss_door_entered(_body: Node2D) -> void:
 	_regenerate.call_deferred()
 
 
+func _on_player_died() -> void:
+	AudioBus.play_sfx(SFX.death(), player.global_position)
+	# wall-clock beat (ignore_time_scale): the killing blow's hitstop would
+	# otherwise stretch this timer several-fold
+	await get_tree().create_timer(0.8, true, false, true).timeout
+	_death_text.text = "YOU DIED\n\ncells collected: %d\n\n[R] restart" % int(SaveStub.data.get("currency", 0))
+	_death_overlay.visible = true
+	get_tree().paused = true
+
+
+func _toggle_pause() -> void:
+	if _title_overlay.visible or _death_overlay.visible:
+		return
+	_pause_overlay.visible = not _pause_overlay.visible
+	get_tree().paused = _pause_overlay.visible
+	if _pause_overlay.visible:
+		_update_pause_text()
+
+
+func _update_pause_text() -> void:
+	_pause_text.text = "PAUSED\n\n[R]esume   [S]hake: %s   [Q]uit run" % ("ON" if _juice.shake_enabled else "OFF")
+
+
 func _on_treasure_collected(_body: Node2D, pickup: Area2D) -> void:
 	SaveStub.add_currency(5)
 	EventBus.currency_dropped.emit(5, pickup.global_position)
+	AudioBus.play_sfx(SFX.pickup(), pickup.global_position)
 	pickup.queue_free()
 
 

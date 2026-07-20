@@ -5,6 +5,8 @@ extends "res://actors/player/state_machine/state.gd"
 ## input near the end of the swing, roll-cancels near the end too.
 ## Hitbox on/off + lunge come from the clip's Call Method tracks.
 
+const SFX := preload("res://fx/sfx_builder.gd")
+
 var _t := 0.0
 var _duration := 0.0
 var _step: AttackStep
@@ -14,6 +16,7 @@ var _chain_buffered := false
 func enter() -> void:
 	tint("#f48fb1")
 	_step = player.weapon.steps[player.attack_step_index]
+	AudioBus.play_sfx(SFX.swing(), player.global_position)
 	_t = 0.0
 	_chain_buffered = false
 	# Slash visuals mirror the facing (SlashPivot flips; the hitbox is

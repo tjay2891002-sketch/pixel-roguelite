@@ -3,11 +3,14 @@ extends "res://actors/player/state_machine/state.gd"
 ## No gravity during the roll (Dead Cells-style float over gaps).
 ## The last roll_cancel_window seconds can cancel into movement or jump.
 
+const SFX := preload("res://fx/sfx_builder.gd")
+
 var _timer := 0.0
 
 
 func enter() -> void:
 	tint("#ce93d8")
+	AudioBus.play_sfx(SFX.roll(), player.global_position)
 	_timer = player.roll_duration
 	player.invulnerable = true
 	# Combat i-frames outlast the roll by roll_iframe_tail (covered by

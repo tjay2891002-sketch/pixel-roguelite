@@ -12,6 +12,7 @@ var _lockout := 0.0
 
 func enter() -> void:
 	tint("#80deea")
+	AudioBus.play_sfx(preload("res://fx/sfx_builder.gd").jump(), player.global_position)
 	_lockout = player.wall_jump_lockout
 
 

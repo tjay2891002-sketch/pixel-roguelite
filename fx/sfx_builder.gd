@@ -1,0 +1,59 @@
+## Procedural SFX builder — tiny synthesized AudioStreamWAVs, no assets.
+## Everything is generated once and cached. Preloaded as a const; no class_name.
+
+const RATE := 22050
+
+static var _cache := {}
+
+
+static func swing() -> AudioStreamWAV: return _cached(&"swing", _noise(0.06, 0.5))
+static func hit() -> AudioStreamWAV: return _cached(&"hit", _noise(0.09, 0.7))
+static func kill() -> AudioStreamWAV: return _cached(&"kill", _noise(0.2, 0.8))
+static func roll() -> AudioStreamWAV: return _cached(&"roll", _noise(0.07, 0.35))
+static func pickup() -> AudioStreamWAV: return _cached(&"pickup", _tone(660.0, 990.0, 0.1, 0.5))
+static func jump() -> AudioStreamWAV: return _cached(&"jump", _tone(250.0, 450.0, 0.08, 0.4))
+static func unlock() -> AudioStreamWAV: return _cached(&"unlock", _tone(150.0, 80.0, 0.12, 0.5))
+static func death() -> AudioStreamWAV: return _cached(&"death", _tone(200.0, 50.0, 0.5, 0.6))
+static func deny() -> AudioStreamWAV: return _cached(&"deny", _tone(120.0, 90.0, 0.1, 0.5))
+
+
+static func _cached(key: StringName, stream: AudioStreamWAV) -> AudioStreamWAV:
+	if not _cache.has(key):
+		_cache[key] = stream
+	return _cache[key]
+
+
+static func _noise(duration: float, volume: float) -> AudioStreamWAV:
+	var frames := int(duration * RATE)
+	var data := PackedByteArray()
+	data.resize(frames)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 1234567
+	for i in frames:
+		var t := float(i) / frames
+		var env := (1.0 - t) * (1.0 - t)
+		var s: float = rng.randf_range(-1.0, 1.0) * volume * env
+		data[i] = int(clampf(s * 127.0, -127.0, 127.0)) & 0xFF
+	return _make(data)
+
+
+static func _tone(freq_a: float, freq_b: float, duration: float, volume: float) -> AudioStreamWAV:
+	var frames := int(duration * RATE)
+	var data := PackedByteArray()
+	data.resize(frames)
+	var phase := 0.0
+	for i in frames:
+		var t := float(i) / frames
+		phase += lerpf(freq_a, freq_b, t) / RATE * TAU
+		var env := (1.0 - t) * (1.0 - t)
+		var s: float = sin(phase) * volume * env
+		data[i] = int(clampf(s * 127.0, -127.0, 127.0)) & 0xFF
+	return _make(data)
+
+
+static func _make(data: PackedByteArray) -> AudioStreamWAV:
+	var stream := AudioStreamWAV.new()
+	stream.format = AudioStreamWAV.FORMAT_8_BITS
+	stream.mix_rate = RATE
+	stream.data = data
+	return stream

@@ -3,9 +3,12 @@ extends "res://actors/player/state_machine/state.gd"
 ## try_ground_jump()/try_air_jump() BEFORE the transition into this state;
 ## enter() only handles presentation.
 
+const SFX := preload("res://fx/sfx_builder.gd")
+
 
 func enter() -> void:
 	tint("#a5d6a7")
+	AudioBus.play_sfx(SFX.jump(), player.global_position)
 
 
 func handle_input(event: InputEvent) -> void:

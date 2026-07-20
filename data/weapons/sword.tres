@@ -5,7 +5,7 @@
 
 [sub_resource type="Resource" id="AttackStep_1"]
 script = ExtResource("2")
-animation = &"attack_1"
+animation = &"sword_1"
 damage = 8
 poise_damage = 8.0
 knockback = Vector2(60, -20)
@@ -17,7 +17,7 @@ roll_cancel_start = 0.18
 
 [sub_resource type="Resource" id="AttackStep_2"]
 script = ExtResource("2")
-animation = &"attack_2"
+animation = &"sword_2"
 damage = 9
 poise_damage = 8.0
 knockback = Vector2(60, -20)
@@ -29,7 +29,7 @@ roll_cancel_start = 0.12
 
 [sub_resource type="Resource" id="AttackStep_3"]
 script = ExtResource("2")
-animation = &"attack_3"
+animation = &"sword_3"
 damage = 12
 poise_damage = 14.0
 knockback = Vector2(140, -40)
