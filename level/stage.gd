@@ -36,8 +36,9 @@ func _process(_delta: float) -> void:
 				_pending_blockers.erase(blocker)
 	if player and _camera:
 		_camera.global_position = player.global_position.round()
-		_debug_label.text = "state: %s   hp: %d   stage: %d   fps: %d" % [
-			_state_name, player.health.hp, stage_index + 1, Engine.get_frames_per_second()]
+		_debug_label.text = "state: %s   hp: %d   cells: %d   stage: %d   fps: %d" % [
+			_state_name, player.health.hp, int(SaveStub.data.get("currency", 0)),
+			stage_index + 1, Engine.get_frames_per_second()]
 
 
 func _build_stage() -> void:
@@ -66,6 +67,7 @@ func _setup_room(pl: Dictionary) -> void:
 		"enemies": [] as Array,
 		"blockers": [] as Array,
 		"cleared": false,
+		"locked": false,
 	}
 	_rooms.append(room)
 
@@ -80,13 +82,17 @@ func _setup_room(pl: Dictionary) -> void:
 	shape.position = room.bounds.get_center()
 	area.add_child(shape)
 	area.body_entered.connect(_on_room_bounds_entered.bind(room))
+	area.body_exited.connect(_on_room_bounds_exited.bind(room))
 	add_child(area)
 
 	if pl.role == 1: # COMBAT
 		_spawn_enemies(room, pl)
 		_make_blockers(room, pl)
+		_make_lock_trigger(room)
 	elif pl.role == 4: # BOSS
 		_make_boss_door(pl)
+	if pl.role in [2, 3, 5]: # SHOP / TREASURE / BRANCH
+		_make_treasure(pl)
 
 
 func _spawn_enemies(room: Dictionary, pl: Dictionary) -> void:
@@ -101,6 +107,45 @@ func _spawn_enemies(room: Dictionary, pl: Dictionary) -> void:
 		enemy.set(&"room_bounds", room.bounds) # hard confinement to this room
 		room.enemies.append(enemy)
 		budget -= 2
+
+
+## Lock trigger sits one tile INSIDE the room bounds: the player must be
+## properly inside before the doors seal — locking from the doorway could
+## close blockers with the player still outside, sealing enemies in and the
+## main path behind them (playtest soft-lock).
+func _make_lock_trigger(room: Dictionary) -> void:
+	var area := Area2D.new()
+	area.collision_layer = 256
+	area.collision_mask = 2
+	var shape := CollisionShape2D.new()
+	var rect := RectangleShape2D.new()
+	rect.size = room.bounds.size - Vector2(32, 32)
+	shape.shape = rect
+	shape.position = room.bounds.get_center()
+	area.add_child(shape)
+	area.body_entered.connect(_on_lock_trigger_entered.bind(room))
+	add_child(area)
+
+
+## Treasure cells (placeholder currency pickup; the shop UI arrives in M5).
+func _make_treasure(pl: Dictionary) -> void:
+	for marker in pl.chunk.spawn_points(&"T"):
+		var pickup := Area2D.new()
+		pickup.collision_layer = 128 # layer 8: pickup
+		pickup.collision_mask = 2
+		var shape := CollisionShape2D.new()
+		var rect := RectangleShape2D.new()
+		rect.size = Vector2(8, 8)
+		shape.shape = rect
+		pickup.add_child(shape)
+		var vis := Polygon2D.new()
+		vis.polygon = PackedVector2Array([Vector2(-4, -4), Vector2(4, -4), Vector2(4, 4), Vector2(-4, 4)])
+		vis.color = Color("c0ca33")
+		pickup.add_child(vis)
+		pickup.add_to_group(&"pickup")
+		add_child(pickup)
+		pickup.global_position = marker.global_position
+		pickup.body_entered.connect(_on_treasure_collected.bind(pickup))
 
 
 ## Door blockers on every CONNECTED door of a combat room (sealed doors are
@@ -152,6 +197,16 @@ func _make_boss_door(pl: Dictionary) -> void:
 
 func _on_room_bounds_entered(_body: Node2D, room: Dictionary) -> void:
 	_apply_camera_bounds(room.bounds)
+
+
+func _on_room_bounds_exited(_body: Node2D, room: Dictionary) -> void:
+	# leaving a still-occupied combat room unlocks it — re-enter to fight.
+	# (prevents sealing enemies in with the player stuck outside: soft-lock)
+	if room.locked and not room.cleared:
+		_set_room_locked(room, false)
+
+
+func _on_lock_trigger_entered(_body: Node2D, room: Dictionary) -> void:
 	if room.role == 1 and not room.cleared and not room.enemies.is_empty():
 		_set_room_locked(room, true)
 
@@ -171,6 +226,12 @@ func _on_boss_door_entered(_body: Node2D) -> void:
 	_regenerate.call_deferred()
 
 
+func _on_treasure_collected(_body: Node2D, pickup: Area2D) -> void:
+	SaveStub.add_currency(5)
+	EventBus.currency_dropped.emit(5, pickup.global_position)
+	pickup.queue_free()
+
+
 # --- helpers -----------------------------------------------------------------
 
 func _apply_camera_bounds(rect: Rect2) -> void:
@@ -181,6 +242,7 @@ func _apply_camera_bounds(rect: Rect2) -> void:
 
 
 func _set_room_locked(room: Dictionary, locked: bool) -> void:
+	room.locked = locked
 	for blocker in room.blockers:
 		if locked and _blocker_overlaps_player(blocker):
 			# player is standing in the doorway — close it once they step clear
@@ -190,6 +252,9 @@ func _set_room_locked(room: Dictionary, locked: bool) -> void:
 			# collision state can't change mid-flush
 			blocker.shape.set_deferred(&"disabled", not locked)
 			blocker.vis.visible = locked
+	if not locked:
+		for blocker in room.blockers:
+			_pending_blockers.erase(blocker)
 
 
 func _blocker_overlaps_player(blocker: Dictionary) -> bool:
@@ -222,6 +287,7 @@ func _setup_player(layout: Array) -> void:
 
 func _regenerate() -> void:
 	stage_index += 1
+	_pending_blockers.clear() # old blockers are about to be freed
 	for child in $Chunks.get_children():
 		child.queue_free()
 	for child in get_children():
