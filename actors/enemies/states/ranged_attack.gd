@@ -18,7 +18,9 @@ func enter() -> void:
 	if actor.target:
 		dir = (actor.target.global_position - actor.global_position).normalized()
 	p.velocity = dir * actor.projectile_speed
-	p.rotation = dir.angle()
+	# the Ball sprite points right by default; only the sprite needs rotation
+	if p.has_node("Sprite"):
+		p.get_node("Sprite").rotation = dir.angle()
 	p.hit_info = actor.swipe_hit_info()
 
 

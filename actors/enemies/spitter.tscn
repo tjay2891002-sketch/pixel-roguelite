@@ -33,13 +33,13 @@ attack_recovery_time = 1.0
 swipe_damage = 5
 attack_state = &"RangedAttack"
 aim_mode = &"shot"
+sprite_set = "spitter"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_body")
 
-[node name="Visual" type="Polygon2D" parent="."]
-color = Color(0.5, 0.8, 0.75, 1)
-polygon = PackedVector2Array(-5, -9, 5, -9, 5, 9, -5, 9)
+[node name="Sprite" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, -7)
 
 [node name="HpLabel" type="Label" parent="."]
 offset_left = -8.0
