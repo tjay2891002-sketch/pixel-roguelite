@@ -103,7 +103,7 @@ func set_facing(dir: int) -> void:
 		return
 	facing = dir
 	if visual is AnimatedSprite2D:
-		visual.flip_h = (facing == 1) # base rat art faces left
+		visual.flip_h = (facing == -1) # base rat art faces right
 	else:
 		visual.scale.x = facing
 	if hitbox:
