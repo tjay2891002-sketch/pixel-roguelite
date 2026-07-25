@@ -11,6 +11,11 @@ signal state_changed(state_name: StringName)
 const PlaceholderAnims = preload("res://actors/player/placeholder_anims.gd")
 const PlayerAnims = preload("res://actors/player/player_anims.gd")
 
+## The fighter art sits ~10.5px LEFT of its 48px frame center. Compensate so
+## the body stays centered on the collision body through flip_h turns
+## (otherwise turning around shifts the visual ~21px sideways).
+const X_CENTER_OFFSET := 10.5
+
 @export_group("Run")
 @export var move_speed := 90.0          # px/s in a 480x270 viewport
 @export var ground_accel := 900.0       # near-instant to full speed = snappy
@@ -84,6 +89,7 @@ func _ready() -> void:
 	state_machine = $StateMachine
 	add_to_group(&"player")
 	visual.sprite_frames = PlayerAnims.build()
+	visual.position.x = facing * X_CENTER_OFFSET
 	state_changed.connect(_on_state_sprite_anim)
 	_on_state_sprite_anim(&"Idle")
 	PlaceholderAnims.build(anim_player)
@@ -143,6 +149,7 @@ func set_facing(dir: int) -> void:
 	feet_ray.target_position.x = absf(feet_ray.target_position.x) * facing
 	head_ray.target_position.x = absf(head_ray.target_position.x) * facing
 	visual.flip_h = (facing == -1) # base fighter art faces right
+	visual.position.x = facing * X_CENTER_OFFSET # keep body centered on flip
 	hitbox.position.x = absf(hitbox.position.x) * facing
 
 
@@ -199,7 +206,7 @@ func _on_state_sprite_anim(state_name: StringName) -> void:
 		&"Run": visual.play(&"run")
 		&"Jump", &"WallJump": visual.play(&"jump")
 		&"Fall": visual.play(&"fall")
-		&"Roll": visual.play(&"run") # rotation tumble is applied on top
+		&"Roll": pass # tumble rotation is the roll visual; don't restart run
 		&"WallCling": visual.play(&"wall")
 		&"LedgeClimb": visual.play(&"ledge")
 		&"Hurt": visual.play(&"hurt")
