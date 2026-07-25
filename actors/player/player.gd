@@ -89,7 +89,7 @@ func _ready() -> void:
 	state_machine = $StateMachine
 	add_to_group(&"player")
 	visual.sprite_frames = PlayerAnims.build()
-	visual.position.x = facing * X_CENTER_OFFSET
+	visual.offset.x = facing * X_CENTER_OFFSET
 	state_changed.connect(_on_state_sprite_anim)
 	_on_state_sprite_anim(&"Idle")
 	PlaceholderAnims.build(anim_player)
@@ -149,7 +149,9 @@ func set_facing(dir: int) -> void:
 	feet_ray.target_position.x = absf(feet_ray.target_position.x) * facing
 	head_ray.target_position.x = absf(head_ray.target_position.x) * facing
 	visual.flip_h = (facing == -1) # base fighter art faces right
-	visual.position.x = facing * X_CENTER_OFFSET # keep body centered on flip
+	# offset (not position) shifts the texture so the body center lands on the
+	# node origin: flip keeps it centered AND roll spins in place (no orbit)
+	visual.offset.x = facing * X_CENTER_OFFSET
 	hitbox.position.x = absf(hitbox.position.x) * facing
 
 

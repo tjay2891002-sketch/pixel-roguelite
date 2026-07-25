@@ -40,25 +40,14 @@ func _spawn(path: String, pos: Vector2):
 
 func _process(_delta: float) -> void:
 	frames += 1
-	if frames == _frames_to_attack:
-		var event := InputEventAction.new()
-		event.action = &"attack"
-		event.pressed = true
-		Input.parse_input_event(event)
-	if frames == _frames_to_attack + 2:
-		var event := InputEventAction.new()
-		event.action = &"attack"
-		event.pressed = false
-		Input.parse_input_event(event)
-	if frames == 113:
-		# ground top: cell row GROUND_CELL_Y top edge
-		var ground_top := float(GROUND_CELL_Y) * 16.0
-		print("ground_top_y = ", ground_top)
-		for name in _actors:
-			var a = _actors[name]
-			var bh: float = BODY_HALF[name]
-			var feet: float = a.global_position.y + bh
-			print("%-8s center_y=%.1f  feet_y=%.1f  float=%.1f" % [name, a.global_position.y, feet, ground_top - feet])
-		var img := get_viewport().get_texture().get_image()
-		img.save_png("C:/Users/admin/.claude/jobs/0afce185/tmp/flat_test.png")
+	if frames == 60:
+		var e := InputEventAction.new()
+		e.action = &"roll"
+		e.pressed = true
+		Input.parse_input_event(e)
+	elif frames == 64:
+		get_viewport().get_texture().get_image().save_png("C:/Users/admin/.claude/jobs/0afce185/tmp/roll_a.png")
+	elif frames == 70:
+		get_viewport().get_texture().get_image().save_png("C:/Users/admin/.claude/jobs/0afce185/tmp/roll_b.png")
+	elif frames == 100:
 		get_tree().quit()
