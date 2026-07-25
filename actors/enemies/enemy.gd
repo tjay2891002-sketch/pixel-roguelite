@@ -49,8 +49,10 @@ var visual
 
 const RAT_ANIMS = preload("res://actors/enemies/rat_anims.gd")
 const SPITTER_ANIMS = preload("res://actors/enemies/spitter_anims.gd")
+const HEAVY_ANIMS = preload("res://actors/enemies/heavy_anims.gd")
+const EAGLE_ANIMS = preload("res://actors/enemies/eagle_anims.gd")
 
-@export var sprite_set := &"" # "rat" | "spitter" | "" (greybox)
+@export var sprite_set := &"" # "rat" | "spitter" | "heavy" | "eagle" | "" (greybox)
 
 @onready var hitbox: Area2D = get_node_or_null("Hitbox")
 @onready var health: Node = $Health
@@ -124,7 +126,7 @@ func _on_state_sprite_anim(state_name: StringName) -> void:
 		&"Patrol", &"Chase": visual.play(&"run")
 		&"Hover": visual.play(&"idle") # flyers idle-hover while approaching
 		&"Telegraph": visual.play(&"attack", 0.4)
-		&"Attack": visual.play(&"attack", 2.0)
+		&"Attack", &"RangedAttack", &"Swoop": visual.play(&"attack", 2.0)
 		&"Stagger": visual.play(&"hurt")
 		&"Dead": visual.play(&"death")
 
@@ -133,6 +135,8 @@ func _build_sprite_set() -> SpriteFrames:
 	match sprite_set:
 		&"rat": return RAT_ANIMS.build()
 		&"spitter": return SPITTER_ANIMS.build()
+		&"heavy": return HEAVY_ANIMS.build()
+		&"eagle": return EAGLE_ANIMS.build()
 	return null
 
 

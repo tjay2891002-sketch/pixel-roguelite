@@ -39,7 +39,7 @@ sprite_set = "spitter"
 shape = SubResource("RectangleShape2D_body")
 
 [node name="Sprite" type="AnimatedSprite2D" parent="."]
-position = Vector2(0, -7)
+position = Vector2(0, -15)
 
 [node name="HpLabel" type="Label" parent="."]
 offset_left = -8.0

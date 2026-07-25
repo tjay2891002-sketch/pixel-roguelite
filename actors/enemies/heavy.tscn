@@ -37,13 +37,13 @@ swipe_damage = 12
 swipe_poise_damage = 16.0
 swipe_knockback = Vector2(140, -40)
 knockback_resist = 0.25
+sprite_set = "heavy"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_body")
 
-[node name="Visual" type="Polygon2D" parent="."]
-color = Color(0.5, 0.3, 0.35, 1)
-polygon = PackedVector2Array(-7, -13, 7, -13, 7, 13, -7, 13)
+[node name="Sprite" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, -11)
 
 [node name="SlashPivot" type="Node2D" parent="."]
 
