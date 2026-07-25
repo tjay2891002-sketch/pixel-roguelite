@@ -54,6 +54,7 @@ func _ready() -> void:
 	RunManager.start_run()
 	EventBus.enemy_killed.connect(_on_enemy_killed)
 	EventBus.player_died.connect(_on_player_died)
+	_setup_background()
 	_build_stage()
 	if not _title_shown_once:
 		await get_tree().process_frame
@@ -372,6 +373,25 @@ func _toggle_pause() -> void:
 
 func _update_pause_text() -> void:
 	_pause_text.text = "PAUSED\n\n[R]esume   [S]hake: %s   [Q]uit run" % ("ON" if _juice.shake_enabled else "OFF")
+
+
+## Two-layer parallax town backdrop behind the chunks (replaces the void).
+func _setup_background() -> void:
+	var bg := ParallaxBackground.new()
+	add_child(bg)
+	bg.add_child(_make_bg_layer(preload("res://assets/level/bg_far.png"), 0.2))
+	bg.add_child(_make_bg_layer(preload("res://assets/level/bg_mid.png"), 0.5))
+
+
+func _make_bg_layer(tex: Texture2D, scale: float) -> ParallaxLayer:
+	var layer := ParallaxLayer.new()
+	layer.motion_scale = Vector2(scale, scale)
+	layer.motion_mirroring = Vector2(384, 0)
+	var sprite := Sprite2D.new()
+	sprite.texture = tex
+	sprite.centered = false
+	layer.add_child(sprite)
+	return layer
 
 
 func _on_treasure_collected(_body: Node2D, pickup: Area2D) -> void:

@@ -116,9 +116,22 @@ func _build() -> void:
 		for x in line.length():
 			match line[x]:
 				"#":
-					layer.set_cell(Vector2i(x, y), 0, TILES.SOLID)
+					# surface when open sky above, otherwise interior fill
+					var above := _char_at(lines, x, y - 1)
+					var src: int = TILES.SURFACE if above != "#" else TILES.FILL
+					layer.set_cell(Vector2i(x, y), src, Vector2i(0, 0))
 				",":
-					layer.set_cell(Vector2i(x, y), 0, TILES.ACCENT)
+					layer.set_cell(Vector2i(x, y), TILES.WALL, Vector2i(0, 0))
+
+
+## Map lookup that treats out-of-bounds as empty (so the top row surfaces).
+func _char_at(lines: PackedStringArray, x: int, y: int) -> String:
+	if y < 0 or y >= lines.size():
+		return "."
+	var line := lines[y]
+	if x < 0 or x >= line.length():
+		return "."
+	return line[x]
 
 
 ## Generation-time: seal an unused door so the room stays enclosed.
@@ -129,4 +142,4 @@ func seal_connector(connector: RoomConnector) -> void:
 		return
 	var cell := Vector2i(connector.position / TILE_SIZE)
 	for i in 3:
-		layer.set_cell(cell + Vector2i(0, i), 0, TILES.WALL)
+		layer.set_cell(cell + Vector2i(0, i), TILES.FILL, Vector2i(0, 0))
