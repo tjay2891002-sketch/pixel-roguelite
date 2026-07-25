@@ -8,6 +8,7 @@ const BODY_HALF := {"player": 11, "rat": 9, "spitter": 9, "heavy": 13, "flyer": 
 
 var frames := 0
 var _actors := {}
+var _frames_to_attack := -1
 
 
 func _ready() -> void:
@@ -22,6 +23,7 @@ func _ready() -> void:
 	_actors["spitter"] = _spawn("res://actors/enemies/spitter.tscn", Vector2(110, 60))
 	_actors["heavy"] = _spawn("res://actors/enemies/heavy.tscn", Vector2(170, 60))
 	_actors["flyer"] = _spawn("res://actors/enemies/flyer.tscn", Vector2(230, 30))
+	_frames_to_attack = 100
 
 	var cam := Camera2D.new()
 	cam.position = Vector2(115, 50)
@@ -38,7 +40,17 @@ func _spawn(path: String, pos: Vector2):
 
 func _process(_delta: float) -> void:
 	frames += 1
-	if frames == 120:
+	if frames == _frames_to_attack:
+		var event := InputEventAction.new()
+		event.action = &"attack"
+		event.pressed = true
+		Input.parse_input_event(event)
+	if frames == _frames_to_attack + 2:
+		var event := InputEventAction.new()
+		event.action = &"attack"
+		event.pressed = false
+		Input.parse_input_event(event)
+	if frames == 113:
 		# ground top: cell row GROUND_CELL_Y top edge
 		var ground_top := float(GROUND_CELL_Y) * 16.0
 		print("ground_top_y = ", ground_top)

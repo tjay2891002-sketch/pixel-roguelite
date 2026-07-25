@@ -9,6 +9,7 @@ extends CharacterBody2D
 signal state_changed(state_name: StringName)
 
 const PlaceholderAnims = preload("res://actors/player/placeholder_anims.gd")
+const PlayerAnims = preload("res://actors/player/player_anims.gd")
 
 @export_group("Run")
 @export var move_speed := 90.0          # px/s in a 480x270 viewport
@@ -69,7 +70,7 @@ var combo_reset_at_msec := 0
 ## state_machine is untyped on purpose (see state.gd header comment).
 var state_machine
 
-@onready var visual: Polygon2D = $Visual
+@onready var visual: AnimatedSprite2D = $Sprite
 @onready var wall_ray: RayCast2D = $WallRay
 @onready var feet_ray: RayCast2D = $FeetRay
 @onready var head_ray: RayCast2D = $HeadRay
@@ -82,6 +83,9 @@ var state_machine
 func _ready() -> void:
 	state_machine = $StateMachine
 	add_to_group(&"player")
+	visual.sprite_frames = PlayerAnims.build()
+	state_changed.connect(_on_state_sprite_anim)
+	_on_state_sprite_anim(&"Idle")
 	PlaceholderAnims.build(anim_player)
 	health.poise_broken.connect(_on_poise_broken)
 	health.died.connect(_on_died)
@@ -138,7 +142,7 @@ func set_facing(dir: int) -> void:
 	wall_ray.target_position.x = absf(wall_ray.target_position.x) * facing
 	feet_ray.target_position.x = absf(feet_ray.target_position.x) * facing
 	head_ray.target_position.x = absf(head_ray.target_position.x) * facing
-	visual.scale.x = facing
+	visual.flip_h = (facing == -1) # base fighter art faces right
 	hitbox.position.x = absf(hitbox.position.x) * facing
 
 
@@ -185,6 +189,22 @@ func can_ledge_grab() -> bool:
 
 func emit_state(state_name: StringName) -> void:
 	state_changed.emit(state_name)
+
+
+## The state machine drives the fighter sprite for every state EXCEPT Attack,
+## which the AnimationPlayer frame-steps (with its hitbox call tracks).
+func _on_state_sprite_anim(state_name: StringName) -> void:
+	match state_name:
+		&"Idle": visual.play(&"idle")
+		&"Run": visual.play(&"run")
+		&"Jump", &"WallJump": visual.play(&"jump")
+		&"Fall": visual.play(&"fall")
+		&"Roll": visual.play(&"run") # rotation tumble is applied on top
+		&"WallCling": visual.play(&"wall")
+		&"LedgeClimb": visual.play(&"ledge")
+		&"Hurt": visual.play(&"hurt")
+		&"Dead": visual.play(&"death")
+		&"Attack": pass # AnimationPlayer controls frames here
 
 
 ## The combat i-frame window (roll duration + tail), counted down in game

@@ -19,9 +19,6 @@ func enter() -> void:
 	AudioBus.play_sfx(SFX.swing(), player.global_position)
 	_t = 0.0
 	_chain_buffered = false
-	# Slash visuals mirror the facing (SlashPivot flips; the hitbox is
-	# configured from the same facing below — direction is never visual-only).
-	player.get_node("SlashPivot").scale.x = player.facing
 	_configure_hitbox()
 	player.anim_player.play(_step.animation)
 	# Force the first evaluation NOW: without this, a freshly played clip's
@@ -36,7 +33,6 @@ func enter() -> void:
 func exit() -> void:
 	player.hitbox_deactivate()
 	player.anim_player.stop()
-	player.get_node("SlashPivot/SlashArc").visible = false
 
 
 func handle_input(event: InputEvent) -> void:

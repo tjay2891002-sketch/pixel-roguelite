@@ -37,9 +37,8 @@ weapon = ExtResource("14")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_body")
 
-[node name="Visual" type="Polygon2D" parent="."]
-color = Color(0.92549, 0.937255, 0.956863, 1)
-polygon = PackedVector2Array(-5, -11, 5, -11, 5, 11, -5, 11)
+[node name="Sprite" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, -12)
 
 [node name="WallRay" type="RayCast2D" parent="."]
 target_position = Vector2(8, 0)
@@ -56,13 +55,6 @@ target_position = Vector2(8, 0)
 collision_mask = 1
 
 [node name="AnimPlayer" type="AnimationPlayer" parent="."]
-
-[node name="SlashPivot" type="Node2D" parent="."]
-
-[node name="SlashArc" type="Polygon2D" parent="SlashPivot"]
-visible = false
-color = Color(0.95, 0.95, 1, 0.75)
-polygon = PackedVector2Array(2, -11, 14, -9, 18, -3, 18, 3, 14, 9, 2, 11, 7, 0)
 
 [node name="Hitbox" type="Area2D" parent="."]
 collision_layer = 8
