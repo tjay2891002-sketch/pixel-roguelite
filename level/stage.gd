@@ -262,17 +262,28 @@ func _make_treasure(pl: Dictionary) -> void:
 		pickup.collision_mask = 2
 		var shape := CollisionShape2D.new()
 		var rect := RectangleShape2D.new()
-		rect.size = Vector2(8, 8)
+		rect.size = Vector2(10, 10)
 		shape.shape = rect
 		pickup.add_child(shape)
+		# bright gold cell with a dark outline + a bob, so it reads against tiles
+		var outline := Polygon2D.new()
+		outline.polygon = PackedVector2Array([Vector2(-8, -8), Vector2(8, -8), Vector2(8, 8), Vector2(-8, 8)])
+		outline.color = Color("3a2a10")
+		pickup.add_child(outline)
 		var vis := Polygon2D.new()
-		vis.polygon = PackedVector2Array([Vector2(-4, -4), Vector2(4, -4), Vector2(4, 4), Vector2(-4, 4)])
-		vis.color = Color("c0ca33")
+		vis.polygon = PackedVector2Array([Vector2(-6, -6), Vector2(6, -6), Vector2(6, 6), Vector2(-6, 6)])
+		vis.color = Color("ffd54a")
 		pickup.add_child(vis)
 		pickup.add_to_group(&"pickup")
 		add_child(pickup)
-		pickup.global_position = Vector2(marker.global_position.x, floor_top - 4.0)
+		pickup.global_position = Vector2(marker.global_position.x, floor_top - 6.0)
 		pickup.body_entered.connect(_on_treasure_collected.bind(pickup))
+		# gentle bob so the cell catches the eye
+		var tween := create_tween().set_loops()
+		tween.tween_property(vis, "position:y", -4.0, 0.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+		tween.tween_property(vis, "position:y", 0.0, 0.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+		tween.parallel().tween_property(outline, "position:y", -4.0, 0.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+		tween.parallel().tween_property(outline, "position:y", 0.0, 0.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
 
 
 ## Door blockers on every CONNECTED door of a combat room (sealed doors are
