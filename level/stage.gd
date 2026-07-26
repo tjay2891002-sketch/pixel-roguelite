@@ -317,8 +317,10 @@ func _make_treasure(pl: Dictionary) -> void:
 		add_child(pickup)
 		pickup.global_position = Vector2(marker.global_position.x, floor_top - 6.0)
 		pickup.body_entered.connect(_on_treasure_collected.bind(pickup))
-		# gentle bob so the cell catches the eye
-		var tween := create_tween().set_loops()
+		# gentle bob so the cell catches the eye — bound to the PICKUP (not the
+		# stage): a stage-bound infinite tween outlives queue_free(), its freed
+		# targets collapse the loop to 0 duration ("Infinite loop detected").
+		var tween := pickup.create_tween().set_loops()
 		tween.tween_property(vis, "position:y", -4.0, 0.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
 		tween.tween_property(vis, "position:y", 0.0, 0.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
 		tween.parallel().tween_property(outline, "position:y", -4.0, 0.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)

@@ -18,7 +18,7 @@ A 2D pixel-art roguelite action-platformer (Dead Cells-like) in **Godot 4.7.1 / 
 
 - **M1** movement FSM (coyote/buffer/jump-cut/dash/wall/ledge), **M2** combat + juice (hitstop/shake/i-frames/poise), **M3** procgen (ASCII-map room chunks + critical-path generator, camera bounds, door locks, boss-door stage advance), **M4** 4 enemy archetypes, **M5** run loop + economy + HUD + death screen.
 - **Art (all real)**: player fighter, rat, spitter+Ball, heavy, eagle, GothicVania tiles+parallax bg, Gothic HUD, Gothic pause menu, shop stands, room props.
-- **Audio**: village BGM (Music bus), combat hit=`Sword Impact`, swing=first whoosh cropped from `Whoosh Triple` (freesound CC0; original file held 3 whooshes → one swing sounded like three), other SFX procedural in `fx/sfx_builder.gd`.
+- **Audio**: village BGM (Music bus), combat hit=`Sword Impact`, swing=`sfx_swing_1/2/3.ogg` — one whoosh per combo step (split from freesound "Whoosh Triple", peaks normalized, attack.gd adds a pitch ladder 1.0/1.06/0.94 so the finisher reads heavier), other SFX procedural in `fx/sfx_builder.gd`.
 - **Props**: crates/barrels destructible (solid to player, roll-through smashes, 12 dmg blast vs enemies); sign/street-lamp decor z=-1 behind actors (was blocking the view).
 
 ## 当前任务清单 / Task List
@@ -67,6 +67,7 @@ A 2D pixel-art roguelite action-platformer (Dead Cells-like) in **Godot 4.7.1 / 
 - Autoload names also fail to resolve in scripts reached via a `--script` main loop's **preload chain** (not just the loop itself) — look up `get_tree().root.get_node_or_null("EventBus")` at runtime (see prop_health.gd).
 - `hurtbox._ready` finds its sibling `Health` on sight — when building nodes in code, Health must enter the tree BEFORE the Hurtbox.
 - .tscn property lines don't take inline `#` comments (parser risk) — keep comments in gd files.
+- An infinite `set_loops()` tween bound to the WRONG node outlives freed targets; they collapse to 0 duration → "Infinite loop detected". Bind looping tweens to the node that owns the targets (`pickup.create_tween()`).
 
 ## Conventions / decisions
 

@@ -7,6 +7,9 @@ extends "res://actors/player/state_machine/state.gd"
 
 const SFX := preload("res://fx/sfx_builder.gd")
 
+# per-step whoosh pitch: 2nd a touch brighter, 3rd (finisher) noticeably lower
+const SWING_PITCH := [1.0, 1.06, 0.94]
+
 var _t := 0.0
 var _duration := 0.0
 var _step: AttackStep
@@ -16,7 +19,8 @@ var _chain_buffered := false
 func enter() -> void:
 	tint("#f48fb1")
 	_step = player.weapon.steps[player.attack_step_index]
-	AudioBus.play_sfx(SFX.swing(), player.global_position)
+	var pitch: float = SWING_PITCH[mini(player.attack_step_index, SWING_PITCH.size() - 1)]
+	AudioBus.play_sfx(SFX.swing(player.attack_step_index), player.global_position, 0.0, pitch)
 	_t = 0.0
 	_chain_buffered = false
 	_configure_hitbox()
