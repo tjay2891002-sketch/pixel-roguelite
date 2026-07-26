@@ -2,12 +2,14 @@
 ## Everything is generated once and cached. Preloaded as a const; no class_name.
 
 const RATE := 22050
+const HIT_SOUND := preload("res://assets/audio/sfx_hit.ogg")
+const SWING_SOUND := preload("res://assets/audio/sfx_swing.ogg")
 
 static var _cache := {}
 
 
-static func swing() -> AudioStreamWAV: return _cached(&"swing", _noise(0.06, 0.5))
-static func hit() -> AudioStreamWAV: return _cached(&"hit", _noise(0.09, 0.7))
+static func swing() -> AudioStream: return SWING_SOUND
+static func hit() -> AudioStream: return HIT_SOUND
 static func kill() -> AudioStreamWAV: return _cached(&"kill", _noise(0.2, 0.8))
 static func roll() -> AudioStreamWAV: return _cached(&"roll", _noise(0.07, 0.35))
 static func pickup() -> AudioStreamWAV: return _cached(&"pickup", _tone(660.0, 990.0, 0.1, 0.5))
