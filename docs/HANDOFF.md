@@ -18,7 +18,7 @@ A 2D pixel-art roguelite action-platformer (Dead Cells-like) in **Godot 4.7.1 / 
 
 - **M1** movement FSM (coyote/buffer/jump-cut/dash/wall/ledge), **M2** combat + juice (hitstop/shake/i-frames/poise), **M3** procgen (ASCII-map room chunks + critical-path generator, camera bounds, door locks, boss-door stage advance), **M4** 4 enemy archetypes, **M5** run loop + economy + HUD + death screen.
 - **Art (all real)**: player fighter, rat, spitter+Ball, heavy, eagle, GothicVania tiles+parallax bg, Gothic HUD, Gothic pause menu, shop stands, room props.
-- **Audio**: village BGM (Music bus), combat hit=`Sword Impact`, swing=`Whoosh Triple` (freesound CC0), other SFX procedural in `fx/sfx_builder.gd`.
+- **Audio**: village BGM (Music bus), combat hit=`Sword Impact`, swing=first whoosh cropped from `Whoosh Triple` (freesound CC0; original file held 3 whooshes → one swing sounded like three), other SFX procedural in `fx/sfx_builder.gd`.
 
 ## 当前任务清单 / Task List
 
@@ -81,4 +81,4 @@ That keeps the next conversation current without re-briefing.
 ## Assets provenance
 
 - `E:\Test\素材` — rat (OutlinedRat), fighter/enemies (sets 1–6, Free City style), GothicVania town (tiles/props/NPC/music), Sunny Land (eagle/piranha/spring), Gothic Pixel UI. License: craftpix.net/file-licenses.
-- freesound.org — velcronator "Sword Impact" + "Whoosh Triple" (CC0). Preview streams used; full wav needs freesound login.
+- freesound.org — velcronator "Sword Impact" + "Whoosh Triple" (CC0). Preview streams used; full wav needs freesound login. `sfx_swing.ogg` = first whoosh only (0–215ms + 30ms fade), cropped 2026-07-26 via python/soundfile.
