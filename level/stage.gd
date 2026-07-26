@@ -8,6 +8,12 @@ const Generator := preload("res://level/generator/stage_generator.gd")
 const GreyboxBiome := preload("res://data/biomes/greybox.tres")
 const SFX := preload("res://fx/sfx_builder.gd")
 const ShopStand := preload("res://level/shop_stand.tscn")
+const PROPS := [
+	preload("res://assets/level/tiles/prop_barrel.png"),
+	preload("res://assets/level/tiles/prop_crate.png"),
+	preload("res://assets/level/tiles/prop_sign.png"),
+	preload("res://assets/level/tiles/prop_street-lamp.png"),
+]
 
 const TILE := 16
 const KEY_R := 82
@@ -177,6 +183,24 @@ func _setup_room(pl: Dictionary, path_index: int) -> void:
 		_make_shop(pl)
 	elif pl.role in [3, 5]: # TREASURE / BRANCH
 		_make_treasure(pl)
+	_scatter_props(room, pl)
+
+
+## Decorative props: 1-2 per room at deterministic random floor spots.
+## Visual only (no collision), anchored to the floor.
+func _scatter_props(room: Dictionary, pl: Dictionary) -> void:
+	var floor_top: float = pl.pos.y + (pl.chunk.cell_size().y - 1) * TILE
+	var w: float = pl.chunk.bounds().size.x
+	var count := 1 + _rng.randi() % 2
+	var margin := 24.0
+	for i in count:
+		var tex: Texture2D = PROPS[_rng.randi() % PROPS.size()]
+		var sprite := Sprite2D.new()
+		sprite.texture = tex
+		add_child(sprite)
+		var span := maxf(0.0, w - margin * 2.0)
+		var px: float = pl.pos.x + margin + _rng.randf() * span
+		sprite.position = Vector2(px, floor_top - tex.get_height() / 2.0)
 
 
 ## Budgeted archetype spawning (M4): budget = chunk budget + distance from
@@ -385,7 +409,8 @@ func _toggle_pause() -> void:
 
 
 func _update_pause_text() -> void:
-	_pause_text.text = "PAUSED\n\n[R]esume   [S]hake: %s   [Q]uit run" % ("ON" if _juice.shake_enabled else "OFF")
+	# PauseTitle shows the title; this label is just the option lines
+	_pause_text.text = "[R]esume   [S]hake: %s   [Q]uit run" % ("ON" if _juice.shake_enabled else "OFF")
 
 
 ## Two-layer parallax town backdrop behind the chunks (replaces the void).
