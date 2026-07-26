@@ -39,7 +39,8 @@ var _state_name := "Idle"
 var _rng: RandomNumberGenerator
 
 @onready var _debug_label: Label = $HUD/DebugLabel
-@onready var _hp_fg: ColorRect = $HUD/HpFg
+@onready var _hp_fill: TextureRect = $HUD/HpBarFill
+@onready var _cell_label: Label = $HUD/CellLabel
 @onready var _info_label: Label = $HUD/InfoLabel
 @onready var _title_overlay: CanvasLayer = $TitleOverlay
 @onready var _death_overlay: CanvasLayer = $DeathOverlay
@@ -74,9 +75,10 @@ func _process(_delta: float) -> void:
 				_pending_blockers.erase(blocker)
 	if player and _camera:
 		_camera.global_position = player.global_position.round()
-		_hp_fg.offset_right = 9.0 + maxf(player.health.hp * 2.0, 0.0)
-		_info_label.text = "cells: %d   stage: %d   %s" % [
-			int(SaveStub.data.get("currency", 0)), stage_index + 1, player.weapon.display_name]
+		# golden fill clipped by hp (44px full bar starting at left edge 16)
+		_hp_fill.offset_right = 16.0 + 44.0 * (float(player.health.hp) / player.health.max_hp)
+		_cell_label.text = "x %d" % int(SaveStub.data.get("currency", 0))
+		_info_label.text = "stage: %d   %s" % [stage_index + 1, player.weapon.display_name]
 		_debug_label.text = "state: %s   hp: %d   fps: %d" % [
 			_state_name, player.health.hp, Engine.get_frames_per_second()]
 

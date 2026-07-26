@@ -1,7 +1,10 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://level/stage.gd" id="1"]
 [ext_resource type="Script" path="res://fx/juice.gd" id="2"]
+[ext_resource type="Texture2D" path="res://assets/ui/bar_frame.png" id="3"]
+[ext_resource type="Texture2D" path="res://assets/ui/bar_fill.png" id="4"]
+[ext_resource type="Texture2D" path="res://assets/ui/icon_potion.png" id="5"]
 
 [node name="Stage" type="Node2D"]
 script = ExtResource("1")
@@ -13,30 +16,45 @@ script = ExtResource("2")
 
 [node name="HUD" type="CanvasLayer" parent="."]
 
-[node name="HpBg" type="ColorRect" parent="HUD"]
+[node name="HpBarFrame" type="TextureRect" parent="HUD"]
 offset_left = 8.0
 offset_top = 8.0
-offset_right = 70.0
-offset_bottom = 16.0
-color = Color(0.2, 0.1, 0.1, 1)
+texture = ExtResource("3")
 
-[node name="HpFg" type="ColorRect" parent="HUD"]
-offset_left = 9.0
-offset_top = 9.0
-offset_right = 69.0
-offset_bottom = 15.0
-color = Color(0.85, 0.25, 0.25, 1)
+[node name="HpBarFill" type="TextureRect" parent="HUD"]
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 60.0
+offset_bottom = 23.0
+texture = ExtResource("4")
+expand_mode = 1
+stretch_mode = 0
+
+[node name="CellIcon" type="TextureRect" parent="HUD"]
+offset_left = 8.0
+offset_top = 38.0
+offset_right = 24.0
+offset_bottom = 54.0
+texture = ExtResource("5")
+expand_mode = 1
+stretch_mode = 2
+
+[node name="CellLabel" type="Label" parent="HUD"]
+offset_left = 27.0
+offset_top = 40.0
+theme_override_font_sizes/font_size = 8
+text = "x 0"
 
 [node name="InfoLabel" type="Label" parent="HUD"]
 offset_left = 8.0
-offset_top = 18.0
+offset_top = 58.0
 theme_override_font_sizes/font_size = 8
-text = "cells: 0"
+text = "stage: 1"
 
 [node name="DebugLabel" type="Label" parent="HUD"]
 visible = false
 offset_left = 8.0
-offset_top = 28.0
+offset_top = 70.0
 theme_override_font_sizes/font_size = 8
 text = "state: -"
 
