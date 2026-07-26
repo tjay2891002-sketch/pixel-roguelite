@@ -1,9 +1,12 @@
 extends "res://actors/player/state_machine/state.gd"
-## Roll — fixed-speed dodge in the facing direction with i-frames.
+## Roll (dash) — fixed-speed dodge in the facing direction with i-frames.
 ## No gravity during the roll (Dead Cells-style float over gaps).
 ## The last roll_cancel_window seconds can cancel into movement or jump.
+## Visual: a forward lean into the dash (not a tumble — reads as a lunge).
 
 const SFX := preload("res://fx/sfx_builder.gd")
+
+const LEAN := 0.4 # radians (~23°) of forward tilt during the dash
 
 var _timer := 0.0
 
@@ -20,6 +23,8 @@ func enter() -> void:
 	player.get_node("Hurtbox").monitoring = false
 	player.velocity.x = player.facing * player.roll_speed
 	player.velocity.y = 0.0
+	player.visual.rotation = player.facing * LEAN
+	player.visual.play(&"run", 1.5)
 
 
 func exit() -> void:
@@ -31,9 +36,6 @@ func exit() -> void:
 
 func physics_update(delta: float) -> void:
 	_timer -= delta
-	# Greybox tumble: one full flip over the roll duration, spun forward in
-	# the facing direction — without this the roll read as "just a sprint".
-	player.visual.rotation = (1.0 - clampf(_timer / player.roll_duration, 0.0, 1.0)) * TAU * player.facing
 	player.velocity.x = player.facing * player.roll_speed
 	player.velocity.y = 0.0
 
