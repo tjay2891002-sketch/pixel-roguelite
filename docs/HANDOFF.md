@@ -20,6 +20,23 @@ A 2D pixel-art roguelite action-platformer (Dead Cells-like) in **Godot 4.7.1 / 
 - **Art (all real)**: player fighter, rat, spitter+Ball, heavy, eagle, GothicVania tiles+parallax bg, Gothic HUD, Gothic pause menu, shop stands, room props.
 - **Audio**: village BGM (Music bus), combat hit=`Sword Impact`, swing=`Whoosh Triple` (freesound CC0), other SFX procedural in `fx/sfx_builder.gd`.
 
+## 当前任务清单 / Task List
+
+> 每次大改动后同步本表 + `MEMORY/pixel-roguelite-game.md`（见文末约定）。状态：✅ 完成 · 🚧 进行中 · 📋 待办
+
+| 状态 | 任务 | 备注 |
+|---|---|---|
+| ✅ | 核心玩法 M1–M5 | 移动/战斗/关卡生成/敌人/跑局 |
+| ✅ | 美术迁移 | 主角+四类敌人+地块+背景+道具+UI+商店 |
+| ✅ | 音频迁移 | BGM + 打击/挥击真实采样 |
+| ✅ | 连续性 | 记忆文件 + 本文档 |
+| 📋 P1 | Boss 战 | 在 boss 房间放一个 Boss 敌人（大血条+多阶段），打通 stage→stage 的瓶颈 |
+| 📋 P1 | 武器池 + 随机掉落 | WeaponData.id 已就绪；按用户要求「已解锁武器随机掉」 |
+| 📋 P2 | Sunny Land 弹簧机关 | mushroom-spring 素材已备，做弹跳平台 |
+| 📋 P2 | biome 变体 | 第二个 BiomeConfig（新 tileset + 新敌人组合），验证生成器通用性 |
+| 📋 P3 | meta 进度 UI | SaveStub 已埋点；永久解锁界面（Delve-bound 才有意义，先 fun） |
+| 📋 P3 | 更高音质战斗音 | freesound 原版 wav 需登录；当前用预览流 lq 版 |
+
 ## Architecture quick map
 
 - `autoload/` EventBus, RunManager (seeded RNG + stage advance), AudioBus (SFX pool + music), SaveStub (the ONLY meta seam).
@@ -53,9 +70,13 @@ A 2D pixel-art roguelite action-platformer (Dead Cells-like) in **Godot 4.7.1 / 
 - Sprite foot offset = `body_half − frame_half`: rat -7, spitter -15, heavy -11, eagle -8 @0.7 scale, player -12.
 - Roll is a **dash** (forward lean + i-frames), NOT a tumble.
 
-## Next candidates
+## Sync convention (keep this + memory fresh)
 
-Sunny Land spring hazard · more weapons/enemies · boss fight · biome variants (BiomeConfig) · weapon unlock pool + random drops (WeaponData.id ready) · meta UI on SaveStub · higher-quality combat wavs (freesound full downloads need login).
+After any major change, the working session updates BOTH:
+1. This file (`docs/HANDOFF.md`) — status + task-list table above.
+2. Memory `pixel-roguelite-game.md` — state, gotchas, decisions.
+
+That keeps the next conversation current without re-briefing.
 
 ## Assets provenance
 
