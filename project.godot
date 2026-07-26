@@ -95,6 +95,7 @@ attack={
 2d_physics/layer_8="pickup"
 2d_physics/layer_9="trigger"
 2d_physics/layer_10="projectile"
+2d_physics/layer_11="prop_body"
 
 [rendering]
 

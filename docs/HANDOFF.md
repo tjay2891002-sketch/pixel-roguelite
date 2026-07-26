@@ -19,6 +19,7 @@ A 2D pixel-art roguelite action-platformer (Dead Cells-like) in **Godot 4.7.1 / 
 - **M1** movement FSM (coyote/buffer/jump-cut/dash/wall/ledge), **M2** combat + juice (hitstop/shake/i-frames/poise), **M3** procgen (ASCII-map room chunks + critical-path generator, camera bounds, door locks, boss-door stage advance), **M4** 4 enemy archetypes, **M5** run loop + economy + HUD + death screen.
 - **Art (all real)**: player fighter, rat, spitter+Ball, heavy, eagle, GothicVania tiles+parallax bg, Gothic HUD, Gothic pause menu, shop stands, room props.
 - **Audio**: village BGM (Music bus), combat hit=`Sword Impact`, swing=first whoosh cropped from `Whoosh Triple` (freesound CC0; original file held 3 whooshes → one swing sounded like three), other SFX procedural in `fx/sfx_builder.gd`.
+- **Props**: crates/barrels destructible (solid to player, roll-through smashes, 12 dmg blast vs enemies); sign/street-lamp decor z=-1 behind actors (was blocking the view).
 
 ## 当前任务清单 / Task List
 
@@ -29,6 +30,7 @@ A 2D pixel-art roguelite action-platformer (Dead Cells-like) in **Godot 4.7.1 / 
 | ✅ | 核心玩法 M1–M5 | 移动/战斗/关卡生成/敌人/跑局 |
 | ✅ | 美术迁移 | 主角+四类敌人+地块+背景+道具+UI+商店 |
 | ✅ | 音频迁移 | BGM + 打击/挥击真实采样 |
+| ✅ | 可破坏道具 | 箱子/木桶：碰撞+可破坏+对敌爆破；高装饰物移到角色下层 |
 | ✅ | 连续性 | 记忆文件 + 本文档 |
 | 📋 P1 | Boss 战 | 在 boss 房间放一个 Boss 敌人（大血条+多阶段），打通 stage→stage 的瓶颈 |
 | 📋 P1 | 武器池 + 随机掉落 | WeaponData.id 已就绪；按用户要求「已解锁武器随机掉」 |
@@ -43,7 +45,7 @@ A 2D pixel-art roguelite action-platformer (Dead Cells-like) in **Godot 4.7.1 / 
 - `actors/player/` player.gd + `state_machine/` + `states/`; sprite anims `player_anims.gd`, attack clips `placeholder_anims.gd`.
 - `actors/enemies/` shared `enemy.gd` (+ per-archetype `*_anims.gd`, scenes, `states/`, `projectile.tscn`).
 - `combat/` WeaponData/AttackStep (data-driven weapons), Health/Hitbox/Hurtbox (shared damage pipeline).
-- `level/` room_chunk.gd (ASCII-map chunks), `generator/stage_generator.gd`, tileset_builder.gd, stage.gd+tscn, shop_stand.*.
+- `level/` room_chunk.gd (ASCII-map chunks), `generator/stage_generator.gd`, tileset_builder.gd, stage.gd+tscn, shop_stand.*, destructible_prop.gd + prop_health.gd (crates/barrels: solid to player via layer 11 prop_body, 1 hit or roll-through breaks, blast deals 12 to enemies in 30px; tall decor stays z=-1 visual-only).
 - `fx/juice.gd` (hitstop/trauma/particles/flash), `fx/sfx_builder.gd`.
 - `data/weapons/` sword.tres, dagger.tres. `data/biomes/greybox.tres`.
 
@@ -62,6 +64,9 @@ A 2D pixel-art roguelite action-platformer (Dead Cells-like) in **Godot 4.7.1 / 
 - Godot **import cache goes stale** after re-cropping a PNG on disk — re-run `--import`.
 - Headless can't render — screenshots need a **windowed** run + `get_viewport().get_texture().get_image()`; and the capture node needs `process_mode=PROCESS_MODE_ALWAYS` to survive `get_tree().paused`.
 - Fighter art sits ~10.5px left of frame center → center with `visual.offset.x` (offset, **not** position — position made roll orbit).
+- Autoload names also fail to resolve in scripts reached via a `--script` main loop's **preload chain** (not just the loop itself) — look up `get_tree().root.get_node_or_null("EventBus")` at runtime (see prop_health.gd).
+- `hurtbox._ready` finds its sibling `Health` on sight — when building nodes in code, Health must enter the tree BEFORE the Hurtbox.
+- .tscn property lines don't take inline `#` comments (parser risk) — keep comments in gd files.
 
 ## Conventions / decisions
 

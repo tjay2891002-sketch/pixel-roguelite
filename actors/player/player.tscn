@@ -29,7 +29,7 @@ size = Vector2(8, 20)
 
 [node name="Player" type="CharacterBody2D"]
 collision_layer = 2
-collision_mask = 261
+collision_mask = 1285
 floor_snap_length = 4.0
 script = ExtResource("1")
 weapon = ExtResource("14")

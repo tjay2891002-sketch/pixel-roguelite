@@ -8,11 +8,18 @@ const Generator := preload("res://level/generator/stage_generator.gd")
 const GreyboxBiome := preload("res://data/biomes/greybox.tres")
 const SFX := preload("res://fx/sfx_builder.gd")
 const ShopStand := preload("res://level/shop_stand.tscn")
+const DestructibleProp := preload("res://level/destructible_prop.gd")
 const PROPS := [
 	preload("res://assets/level/tiles/prop_barrel.png"),
 	preload("res://assets/level/tiles/prop_crate.png"),
 	preload("res://assets/level/tiles/prop_sign.png"),
 	preload("res://assets/level/tiles/prop_street-lamp.png"),
+]
+# Crates/barrels are solid + smashable; tall decor (sign, lamp) stays
+# visual-only — giving a 108px lamp a body would wall off rooms.
+const BREAKABLE_PROPS := [
+	preload("res://assets/level/tiles/prop_barrel.png"),
+	preload("res://assets/level/tiles/prop_crate.png"),
 ]
 
 const TILE := 16
@@ -186,8 +193,10 @@ func _setup_room(pl: Dictionary, path_index: int) -> void:
 	_scatter_props(room, pl)
 
 
-## Decorative props: 1-2 per room at deterministic random floor spots.
-## Visual only (no collision), anchored to the floor.
+## Room props: 1-2 per room at deterministic random floor spots, anchored to
+## the floor. Breakables become DestructibleProps (solid to the player, blast
+## enemies when smashed); decor stays visual-only at z=-1 — same layer as the
+## tiles, so actors (z 0) always draw on top and it can't block the view.
 func _scatter_props(room: Dictionary, pl: Dictionary) -> void:
 	var floor_top: float = pl.pos.y + (pl.chunk.cell_size().y - 1) * TILE
 	var w: float = pl.chunk.bounds().size.x
@@ -195,12 +204,18 @@ func _scatter_props(room: Dictionary, pl: Dictionary) -> void:
 	var margin := 24.0
 	for i in count:
 		var tex: Texture2D = PROPS[_rng.randi() % PROPS.size()]
-		var sprite := Sprite2D.new()
-		sprite.texture = tex
-		add_child(sprite)
 		var span := maxf(0.0, w - margin * 2.0)
 		var px: float = pl.pos.x + margin + _rng.randf() * span
-		sprite.position = Vector2(px, floor_top - tex.get_height() / 2.0)
+		if BREAKABLE_PROPS.has(tex):
+			var prop := DestructibleProp.new(tex)
+			add_child(prop)
+			prop.position = Vector2(px, floor_top) # origin at the feet
+		else:
+			var sprite := Sprite2D.new()
+			sprite.texture = tex
+			sprite.z_index = -1
+			add_child(sprite)
+			sprite.position = Vector2(px, floor_top - tex.get_height() / 2.0)
 
 
 ## Budgeted archetype spawning (M4): budget = chunk budget + distance from
