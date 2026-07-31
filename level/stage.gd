@@ -210,15 +210,27 @@ func _setup_room(pl: Dictionary, path_index: int) -> void:
 ## the floor. Breakables become DestructibleProps (solid to the player, blast
 ## enemies when smashed); decor stays visual-only at z=-1 — same layer as the
 ## tiles, so actors (z 0) always draw on top and it can't block the view.
+## Spots overlapping a T marker are SKIPPED: a solid crate on a shop stand
+## or treasure cell shoves the player out of interaction range (test flake).
 func _scatter_props(room: Dictionary, pl: Dictionary) -> void:
 	var floor_top: float = pl.pos.y + (pl.chunk.cell_size().y - 1) * TILE
 	var w: float = pl.chunk.bounds().size.x
 	var count := 1 + _rng.randi() % 2
 	var margin := 24.0
+	var avoid: Array = []
+	for m in pl.chunk.spawn_points(&"T"):
+		avoid.append(m.global_position.x)
 	for i in count:
 		var tex: Texture2D = PROPS[_rng.randi() % PROPS.size()]
 		var span := maxf(0.0, w - margin * 2.0)
 		var px: float = pl.pos.x + margin + _rng.randf() * span
+		var blocked := false
+		for mx in avoid:
+			if absf(px - mx) < 28.0:
+				blocked = true
+				break
+		if blocked:
+			continue
 		if BREAKABLE_PROPS.has(tex):
 			var prop := DestructibleProp.new(tex)
 			add_child(prop)

@@ -17,6 +17,10 @@ func _ready() -> void:
 
 
 func load_data() -> void:
+	# headless == tests: start from an EMPTY dict and never read the real
+	# save — a late load_data replacing `data` mid-test was a flake source
+	if DisplayServer.get_name() == "headless":
+		return
 	if not FileAccess.file_exists(SAVE_PATH):
 		return
 	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)

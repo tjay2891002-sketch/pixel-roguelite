@@ -49,49 +49,55 @@ func _physics_process(_delta: float) -> bool:
 			_check(_leveled == 3, "leveled_up fired 3 times", "count=%d" % _leveled)
 			_check(absf(_player.damage_mult - 1.24) < 0.001, "level 4 damage mult 1.24", "mult=%.3f" % _player.damage_mult)
 			_check(_player.health.max_hp == 42, "level 4 max hp 42", "max=%d" % _player.health.max_hp)
-		# --- B: potion
+		# --- B: potion (F-confirm, no auto-collect)
 		7:
 			_player.health.hp = 10
 			Drops.spawn(root.get_node("Playground"), &"potion", _player.global_position)
-		12:
-			_check(_player.health.hp == 23, "potion heals 30%% of max 42 (rounds to 13)", "hp=%d" % _player.health.hp)
-		# --- C: rage buff + expiry
-		14:
+		10:
+			_check(_player.health.hp == 10, "potion waits for F (no auto-drink)", "hp=%d" % _player.health.hp)
+			_tap(&"interact")
+		15:
+			_check(_player.health.hp == 23, "F drinks: 30%% of max 42 (rounds to 13)", "hp=%d" % _player.health.hp)
+		# --- C: rage buff (F-confirm) + expiry
+		17:
 			Drops.spawn(root.get_node("Playground"), &"rage", _player.global_position)
-		18:
-			_check(absf(_player.damage_mult - 1.24 * 1.35) < 0.001, "rage: damage x1.35", "mult=%.3f" % _player.damage_mult)
+		20:
+			_check(absf(_player.damage_mult - 1.24) < 0.001, "rage waits for F", "mult=%.3f" % _player.damage_mult)
+			_tap(&"interact")
+		24:
+			_check(absf(_player.damage_mult - 1.24 * 1.35) < 0.001, "F takes rage: damage x1.35", "mult=%.3f" % _player.damage_mult)
 			_player._buffs[&"rage"] = 0.05 # fast-forward the expiry
-		26:
+		31:
 			_check(absf(_player.damage_mult - 1.24) < 0.001, "rage expires back to level baseline", "mult=%.3f" % _player.damage_mult)
 		# --- D: weapon swap needs the interact (F) confirm
-		28:
+		33:
 			_teleport(Vector2(138, 139))
 			Drops.spawn(root.get_node("Playground"), &"weapon", _player.global_position)
-		32:
+		37:
 			_check(_player.weapon.id == &"sword", "weapon pickup does NOT auto-collect", "weapon=%s" % _player.weapon.id)
 			_tap(&"interact")
-		37:
+		42:
 			_check(_player.weapon.id != &"sword", "F swaps off the sword", "weapon=%s" % _player.weapon.id)
 			_check(_player.weapon.id in [&"dagger", &"axe"], "new weapon from the pool", "weapon=%s" % _player.weapon.id)
-		38:
+		43:
 			# step onto the swap-dropped sword (16px left of the swap point)
 			_teleport(Vector2(124, 139))
-		41:
+		46:
 			_check(_player.weapon.id != &"sword", "old weapon waits for its own F", "weapon=%s" % _player.weapon.id)
 			_tap(&"interact")
-		46:
+		51:
 			_check(_player.weapon.id == &"sword", "F on the old weapon swaps back", "weapon=%s" % _player.weapon.id)
 		# --- E: axe swing damage flows (equip directly, then hit the dummy)
-		52:
+		53:
 			_player.equip(AXE)
 			_teleport(Vector2(_dummy_pos().x - 20.0, 139))
 			_player.set_facing(1)
 			_tap(&"attack")
-		66:
+		67:
 			# axe_1 = 14 dmg x level mult 1.24 = 17 (int); dummy 40 -> 23
 			_check(_dummy_hp() == 23, "axe step 1 deals 14x1.24=17 (40->23)", "hp=%d" % _dummy_hp())
 		# --- F: curse raises damage taken
-		68:
+		69:
 			_player.apply_buff(&"curse")
 			_check(absf(_player.damage_taken_mult - 1.5) < 0.001, "curse: damage taken x1.5", "mult=%.2f" % _player.damage_taken_mult)
 			var before: int = _player.health.hp
