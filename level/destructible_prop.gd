@@ -106,7 +106,9 @@ func _on_broke() -> void:
 	$Hurtbox.set_deferred(&"monitoring", false)
 	$RollZone.set_deferred(&"monitoring", false)
 	_debris()
-	Drops.roll_crate_drop(get_parent(), global_position + Vector2(0.0, -8.0))
+	# deferred: _on_broke runs inside a physics signal — adding the pickup's
+	# collision shapes mid-flush errors ("Can't change this state...")
+	Drops.roll_crate_drop.call_deferred(get_parent(), global_position + Vector2(0.0, -8.0))
 	call_deferred(&"_blast")
 
 

@@ -1,8 +1,8 @@
 ## Drop table + pickup spawning for smashed props. Static, autoload-free
 ## (runtime lookups only) so test --script preload chains can include it.
 ## Weights are rolled on RunManager's run RNG when available.
-
-const Pickup := preload("res://level/pickup.gd")
+## pickup.gd is loaded at RUNTIME (not preloaded): pickup.gd preloads THIS
+## script for the deferred swap-spawn — a preload both ways would cycle.
 
 const WEAPON_POOL := [
 	preload("res://data/weapons/sword.tres"),
@@ -41,21 +41,22 @@ static func roll_crate_drop(parent: Node, pos: Vector2) -> void:
 	spawn(parent, kind, pos)
 
 
-## Spawn a specific pickup (tests drive this directly).
-static func spawn(parent: Node, kind: StringName, pos: Vector2) -> Area2D:
-	var payload = null
-	match kind:
-		&"weapon":
-			payload = _pick_weapon(parent)
-			if payload == null:
-			# pool exhausted (shouldn't happen with 3 weapons) -> cells
-				kind = &"cells"
+## Spawn a specific pickup (tests drive this directly; an explicit payload
+## skips the table-driven resolution — the weapon swap-drop uses that).
+static func spawn(parent: Node, kind: StringName, pos: Vector2, payload = null) -> Area2D:
+	if payload == null:
+		match kind:
+			&"weapon":
+				payload = _pick_weapon(parent)
+				if payload == null:
+				# pool exhausted (shouldn't happen with 3 weapons) -> cells
+					kind = &"cells"
+					payload = 4
+			&"potion":
+				payload = _potion_amount(parent)
+			&"cells":
 				payload = 4
-		&"potion":
-			payload = _potion_amount(parent)
-		&"cells":
-			payload = 4
-	var p: Area2D = Pickup.new(kind, payload)
+	var p: Area2D = load("res://level/pickup.gd").new(kind, payload)
 	parent.add_child(p)
 	p.global_position = pos
 	return p

@@ -58,18 +58,24 @@ func _physics_process(_delta: float) -> bool:
 			_player._buffs[&"rage"] = 0.05 # fast-forward the expiry
 		26:
 			_check(absf(_player.damage_mult - 1.24) < 0.001, "rage expires back to level baseline", "mult=%.3f" % _player.damage_mult)
-		# --- D: weapon swap
+		# --- D: weapon swap needs the interact (F) confirm
 		28:
 			_teleport(Vector2(138, 139))
 			Drops.spawn(root.get_node("Playground"), &"weapon", _player.global_position)
-		33:
-			_check(_player.weapon.id != &"sword", "weapon pickup swaps off the sword", "weapon=%s" % _player.weapon.id)
+		32:
+			_check(_player.weapon.id == &"sword", "weapon pickup does NOT auto-collect", "weapon=%s" % _player.weapon.id)
+			_tap(&"interact")
+		37:
+			_check(_player.weapon.id != &"sword", "F swaps off the sword", "weapon=%s" % _player.weapon.id)
 			_check(_player.weapon.id in [&"dagger", &"axe"], "new weapon from the pool", "weapon=%s" % _player.weapon.id)
-		34:
+		38:
 			# step onto the swap-dropped sword (16px left of the swap point)
 			_teleport(Vector2(124, 139))
-		40:
-			_check(_player.weapon.id == &"sword", "walking over the old weapon swaps back", "weapon=%s" % _player.weapon.id)
+		41:
+			_check(_player.weapon.id != &"sword", "old weapon waits for its own F", "weapon=%s" % _player.weapon.id)
+			_tap(&"interact")
+		46:
+			_check(_player.weapon.id == &"sword", "F on the old weapon swaps back", "weapon=%s" % _player.weapon.id)
 		# --- E: axe swing damage flows (equip directly, then hit the dummy)
 		52:
 			_player.equip(AXE)

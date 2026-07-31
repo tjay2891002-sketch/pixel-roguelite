@@ -1,7 +1,7 @@
 extends Area2D
 ## ShopStand — a one-time purchase stand (M5 light economy). Walk up and
-## press move_up to buy: heal restores HP, dagger equips the weapon
-## (data-driven: player.weapon just swaps the WeaponData resource).
+## press interact (F) to buy: heal restores HP, dagger equips the weapon
+## (data-driven: player.equip swaps the WeaponData resource).
 ## Visual: crate base + floating offer icon (potion=heal, club=dagger) + cost.
 
 const SFX := preload("res://fx/sfx_builder.gd")
@@ -25,7 +25,8 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _in_range and event.is_action_pressed(&"move_up"):
+	if _in_range and event.is_action_pressed(&"interact"):
+		get_viewport().set_input_as_handled() # one stand/pickup per press
 		_try_buy()
 
 
@@ -38,7 +39,7 @@ func _try_buy() -> void:
 	if offer == &"heal":
 		player.health.hp = mini(player.health.hp + 10, player.health.max_hp)
 	elif offer == &"dagger":
-		player.set("weapon", Dagger)
+		player.equip(Dagger)
 	SaveStub.data["currency"] = cells - cost
 	EventBus.currency_dropped.emit(-cost, global_position)
 	AudioBus.play_sfx(SFX.pickup(), global_position)

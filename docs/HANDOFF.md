@@ -12,7 +12,7 @@ A 2D pixel-art roguelite action-platformer (Dead Cells-like) in **Godot 4.7.1 / 
 - Headless tests (all must pass): run each from the console exe —
   `Godot_v4.7.1-stable_win64_console.exe --headless --path <proj> --script res://tools/<name>_test.gd`
   where `<name>` ∈ smoke / climb / combat / generator / stage / enemy.
-- Controls: A/D move, Space jump (x2), J attack, K/Shift dash, Esc pause, F3 debug.
+- Controls: A/D move, Space jump (x2), J attack, K/Shift dash, F interact (weapon swap / shop), Esc pause, F3 debug.
 
 ## Status — everything below is DONE
 
@@ -20,7 +20,7 @@ A 2D pixel-art roguelite action-platformer (Dead Cells-like) in **Godot 4.7.1 / 
 - **Art (all real)**: player fighter, rat, spitter+Ball, heavy, eagle, GothicVania tiles+parallax bg, Gothic HUD, Gothic pause menu, shop stands, room props.
 - **Audio**: village BGM (Music bus), combat hit=`Sword Impact`, swing=`sfx_swing_1/2/3.ogg` — one whoosh per combo step (split from freesound "Whoosh Triple", peaks normalized, attack.gd adds a pitch ladder 1.0/1.06/0.94 so the finisher reads heavier), other SFX procedural in `fx/sfx_builder.gd`.
 - **Props**: crates/barrels destructible (solid to player, roll-through smashes, 12 dmg blast vs enemies); sign/street-lamp decor z=-1 behind actors (was blocking the view).
-- **Progression**: kill XP → levels on RunManager (+8% damage, +4 max hp & small heal per level); crates drop weapon-swap (pool: sword/dagger/NEW heavy axe) / heal potion 30% / rage+swift buffs / curse debuff / cells (`level/drops.gd` table, `level/pickup.gd`).
+- **Progression**: kill XP → levels on RunManager (+8% damage, +4 max hp & small heal per level; HUD shows a blue XP bar + Lv label); crates drop weapon-swap (pool: sword/dagger/NEW heavy axe — walk-up + F to swap, old weapon drops aside) / heal potion 30% / rage+swift buffs / curse debuff / cells (`level/drops.gd` table, `level/pickup.gd`). Shop buys also moved to F.
 
 ## 当前任务清单 / Task List
 
@@ -70,6 +70,7 @@ A 2D pixel-art roguelite action-platformer (Dead Cells-like) in **Godot 4.7.1 / 
 - `hurtbox._ready` finds its sibling `Health` on sight — when building nodes in code, Health must enter the tree BEFORE the Hurtbox.
 - .tscn property lines don't take inline `#` comments (parser risk) — keep comments in gd files.
 - An infinite `set_loops()` tween bound to the WRONG node outlives freed targets; they collapse to 0 duration → "Infinite loop detected". Bind looping tweens to the node that owns the targets (`pickup.create_tween()`).
+- Never `add_child` a collision-bearing node inside a physics signal (body_entered, hitbox dispatch): shape creation/monitoring mid-flush errors ("Can't change this state while flushing queries"). `call_deferred` the spawn (see destructible_prop's drop roll + pickup's swap-drop).
 
 ## Conventions / decisions
 

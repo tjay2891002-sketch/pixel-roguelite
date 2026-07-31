@@ -53,6 +53,8 @@ var _rng: RandomNumberGenerator
 
 @onready var _debug_label: Label = $HUD/DebugLabel
 @onready var _hp_fill: TextureRect = $HUD/HpBarFill
+@onready var _xp_fill: ColorRect = $HUD/XpBarFill
+@onready var _lv_label: Label = $HUD/LvLabel
 @onready var _cell_label: Label = $HUD/CellLabel
 @onready var _info_label: Label = $HUD/InfoLabel
 @onready var _title_overlay: CanvasLayer = $TitleOverlay
@@ -91,10 +93,11 @@ func _process(_delta: float) -> void:
 		_camera.global_position = player.global_position.round()
 		# golden fill clipped by hp (44px full bar starting at left edge 16)
 		_hp_fill.offset_right = 16.0 + 44.0 * (float(player.health.hp) / player.health.max_hp)
+		# blue xp bar: same 44px span under the hp bar
+		_xp_fill.offset_right = 16.0 + 44.0 * (float(RunManager.xp) / RunManager.xp_needed())
+		_lv_label.text = "Lv%d" % RunManager.level
 		_cell_label.text = "x %d" % int(SaveStub.data.get("currency", 0))
-		_info_label.text = "stage: %d   %s   Lv%d (%d/%d xp)" % [
-			stage_index + 1, player.weapon.display_name,
-			RunManager.level, RunManager.xp, RunManager.xp_needed()]
+		_info_label.text = "stage: %d   %s" % [stage_index + 1, player.weapon.display_name]
 		_debug_label.text = "state: %s   hp: %d   fps: %d" % [
 			_state_name, player.health.hp, Engine.get_frames_per_second()]
 
