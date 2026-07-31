@@ -4,10 +4,15 @@
 ## pickup.gd is loaded at RUNTIME (not preloaded): pickup.gd preloads THIS
 ## script for the deferred swap-spawn — a preload both ways would cycle.
 
+## The weapon pool: data + unlock cost (sword is the free starter). Only
+## UNLOCKED weapons drop (SaveStub); the shop sells the unlocks.
 const WEAPON_POOL := [
-	preload("res://data/weapons/sword.tres"),
-	preload("res://data/weapons/dagger.tres"),
-	preload("res://data/weapons/axe.tres"),
+	{&"data": preload("res://data/weapons/sword.tres"), &"cost": 0},
+	{&"data": preload("res://data/weapons/dagger.tres"), &"cost": 15},
+	{&"data": preload("res://data/weapons/spear.tres"), &"cost": 20},
+	{&"data": preload("res://data/weapons/greatsword.tres"), &"cost": 25},
+	{&"data": preload("res://data/weapons/axe.tres"), &"cost": 25},
+	{&"data": preload("res://data/weapons/hammer.tres"), &"cost": 30},
 ]
 
 ## [kind, weight] — potion payload is a fraction of max hp, resolved on spawn.
@@ -62,14 +67,20 @@ static func spawn(parent: Node, kind: StringName, pos: Vector2, payload = null) 
 	return p
 
 
-## A weapon the player isn't currently holding.
+## A weapon the player isn't currently holding, from the UNLOCKED pool
+## (SaveStub). Returns null when nothing qualifies (caller falls back).
 static func _pick_weapon(parent: Node):
 	var player := parent.get_tree().get_first_node_in_group(&"player")
 	var held: StringName = &"" if player == null else player.weapon.id
+	var save = parent.get_tree().root.get_node_or_null("SaveStub")
 	var options: Array = []
-	for w in WEAPON_POOL:
-		if w.id != held:
-			options.append(w)
+	for entry in WEAPON_POOL:
+		var w = entry[&"data"]
+		if w.id == held:
+			continue
+		if save and not save.is_weapon_unlocked(w.id):
+			continue
+		options.append(w)
 	if options.is_empty():
 		return null
 	return options[int(_rng_float(parent) * options.size()) % options.size()]

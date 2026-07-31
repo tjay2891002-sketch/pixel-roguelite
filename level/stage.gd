@@ -8,6 +8,7 @@ const Generator := preload("res://level/generator/stage_generator.gd")
 const GreyboxBiome := preload("res://data/biomes/greybox.tres")
 const SFX := preload("res://fx/sfx_builder.gd")
 const ShopStand := preload("res://level/shop_stand.tscn")
+const Drops := preload("res://level/drops.gd")
 const DestructibleProp := preload("res://level/destructible_prop.gd")
 const PROPS := [
 	preload("res://assets/level/tiles/prop_barrel.png"),
@@ -286,19 +287,28 @@ func _make_lock_trigger(room: Dictionary) -> void:
 	add_child(area)
 
 
-## Shop room: one stand per T marker — heal first, dagger second.
+## Shop room: one stand per T marker — heal first, then a weapon UNLOCK
+## offer (random locked pick, seeded per stage; unlocks are what crate
+## drops roll from). Everything unlocked already -> second heal stand.
 func _make_shop(pl: Dictionary) -> void:
 	var markers = pl.chunk.spawn_points(&"T")
-	var offers := [
-		[&"heal", 10, "Heal 10HP"],
-		[&"dagger", 15, "Dagger"],
-	]
+	var offers: Array = [[&"heal", 10, "Heal 10HP", null]]
+	var locked: Array = []
+	for entry in Drops.WEAPON_POOL:
+		if not SaveStub.is_weapon_unlocked(entry[&"data"].id):
+			locked.append(entry)
+	if not locked.is_empty():
+		var pick = locked[_rng.randi() % locked.size()]
+		offers.append([&"weapon", pick[&"cost"], pick[&"data"].display_name, pick[&"data"]])
+	else:
+		offers.append([&"heal", 10, "Heal 10HP", null])
 	var floor_top: float = pl.pos.y + (pl.chunk.cell_size().y - 1) * TILE
 	for i in mini(offers.size(), markers.size()):
 		var stand := ShopStand.instantiate()
 		stand.offer = offers[i][0]
 		stand.cost = offers[i][1]
 		stand.stand_text = offers[i][2]
+		stand.weapon = offers[i][3]
 		add_child(stand)
 		# stands sit on the floor below their marker, reachable by the player
 		stand.global_position = Vector2(markers[i].global_position.x, floor_top - 5.0)
@@ -465,8 +475,13 @@ func _toggle_pause() -> void:
 
 
 func _update_pause_text() -> void:
-	# PauseTitle shows the title; this label is just the option lines
-	_pause_text.text = "[R]esume   [S]hake: %s   [Q]uit run" % ("ON" if _juice.shake_enabled else "OFF")
+	# PauseTitle shows the title; this label is the option lines + meta state
+	var names: Array = []
+	for entry in Drops.WEAPON_POOL:
+		if SaveStub.is_weapon_unlocked(entry[&"data"].id):
+			names.append(entry[&"data"].display_name)
+	_pause_text.text = "[R]esume   [S]hake: %s   [Q]uit run\nweapons: %s" % [
+		"ON" if _juice.shake_enabled else "OFF", ", ".join(names)]
 
 
 ## Two-layer parallax town backdrop behind the chunks (replaces the void).

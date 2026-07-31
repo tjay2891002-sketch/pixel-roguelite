@@ -1,0 +1,46 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://combat/weapon_data.gd" id="1"]
+[ext_resource type="Script" path="res://combat/attack_step.gd" id="2"]
+
+[sub_resource type="Resource" id="AttackStep_1"]
+script = ExtResource("2")
+animation = &"greatsword_1"
+damage = 11
+poise_damage = 10.0
+knockback = Vector2(80, -25)
+lunge = 90.0
+hitbox_size = Vector2(30, 14)
+hitbox_offset = Vector2(17, 0)
+chain_window_start = 0.15
+roll_cancel_start = 0.20
+
+[sub_resource type="Resource" id="AttackStep_2"]
+script = ExtResource("2")
+animation = &"greatsword_2"
+damage = 12
+poise_damage = 10.0
+knockback = Vector2(85, -25)
+lunge = 95.0
+hitbox_size = Vector2(30, 14)
+hitbox_offset = Vector2(17, 0)
+chain_window_start = 0.14
+roll_cancel_start = 0.18
+
+[sub_resource type="Resource" id="AttackStep_3"]
+script = ExtResource("2")
+animation = &"greatsword_3"
+damage = 18
+poise_damage = 16.0
+knockback = Vector2(150, -50)
+lunge = 120.0
+hitbox_size = Vector2(32, 16)
+hitbox_offset = Vector2(18, 0)
+chain_window_start = 0.18
+roll_cancel_start = 0.24
+
+[resource]
+script = ExtResource("1")
+id = &"greatsword"
+display_name = "Greatsword"
+steps = Array[Resource]([SubResource("AttackStep_1"), SubResource("AttackStep_2"), SubResource("AttackStep_3")])

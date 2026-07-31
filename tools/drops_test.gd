@@ -38,6 +38,11 @@ func _physics_process(_delta: float) -> bool:
 	match _frame:
 		# --- A: XP -> levels -> player stats
 		2:
+			# drops roll from the UNLOCKED pool only; pretend dagger+axe are
+			# unlocked. MUST happen on a frame, not in _initialize: the
+			# autoload's _ready (load_data) runs AFTER _initialize and would
+			# wipe the mutation. In-memory only; flush is a headless no-op.
+			root.get_node("SaveStub").data["unlocked_weapons"] = [&"sword", &"dagger", &"axe"]
 			_rm.add_xp(100) # curve 15/25/35/45... -> level 4 with 25 left over
 		5:
 			_check(_rm.level == 4 and _rm.xp == 25, "100 xp => level 4, 25 left", "level=%d xp=%d" % [_rm.level, _rm.xp])

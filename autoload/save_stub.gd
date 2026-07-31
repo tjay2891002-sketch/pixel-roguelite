@@ -5,6 +5,9 @@ extends Node
 ## upgrades/unlocks read this; no meta systems exist yet by design.
 
 const SAVE_PATH := "user://save.json"
+## Weapon unlock pool (meta): the starter sword is always unlocked; shop
+## unlocks append here and persist via flush().
+const DEFAULT_UNLOCKED: Array = [&"sword"]
 
 var data: Dictionary = {}
 
@@ -26,6 +29,9 @@ func load_data() -> void:
 
 
 func flush() -> void:
+	# tests run headless and must never touch the player's real save file
+	if DisplayServer.get_name() == "headless":
+		return
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file == null:
 		push_warning("[SaveStub] could not write save file: %s" % error_string(FileAccess.get_open_error()))
@@ -37,3 +43,23 @@ func flush() -> void:
 ## spends it yet.
 func add_currency(amount: int) -> void:
 	data["currency"] = int(data.get("currency", 0)) + amount
+
+
+# --- weapon unlock pool ------------------------------------------------------
+
+func unlocked_weapons() -> Array:
+	return data.get("unlocked_weapons", DEFAULT_UNLOCKED)
+
+
+func is_weapon_unlocked(id: StringName) -> bool:
+	return unlocked_weapons().has(id)
+
+
+func unlock_weapon(id: StringName) -> void:
+	if is_weapon_unlocked(id):
+		return
+	if not data.has("unlocked_weapons"):
+		# copy the default FIRST — never mutate the const
+		data["unlocked_weapons"] = DEFAULT_UNLOCKED.duplicate()
+	data["unlocked_weapons"].append(id)
+	flush()

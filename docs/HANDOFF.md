@@ -33,9 +33,9 @@ A 2D pixel-art roguelite action-platformer (Dead Cells-like) in **Godot 4.7.1 / 
 | ✅ | 音频迁移 | BGM + 打击/挥击真实采样 |
 | ✅ | 可破坏道具 | 箱子/木桶：碰撞+可破坏+对敌爆破；高装饰物移到角色下层 |
 | ✅ | 升级 + 掉落 | 杀怪得经验升级（加攻/加血）；箱子掉武器（新重斧）/药瓶/buff/curse/细胞 |
+| ✅ | 武器解锁池 | 6 武器（剑/匕/枪/巨剑/斧/锤）；商店卖解锁（细胞付费，SaveStub 持久化），已解锁才进掉落池；暂停菜单可见已解锁 |
 | ✅ | 连续性 | 记忆文件 + 本文档 |
 | 📋 P1 | Boss 战 | 在 boss 房间放一个 Boss 敌人（大血条+多阶段），打通 stage→stage 的瓶颈 |
-| 📋 P2 | 武器解锁池 | 掉落已做（3 武器）；「已解锁才掉」依赖 P3 meta UI |
 | 📋 P2 | Sunny Land 弹簧机关 | mushroom-spring 素材已备，做弹跳平台 |
 | 📋 P2 | biome 变体 | 第二个 BiomeConfig（新 tileset + 新敌人组合），验证生成器通用性 |
 | 📋 P3 | meta 进度 UI | SaveStub 已埋点；永久解锁界面（Delve-bound 才有意义，先 fun） |
@@ -49,7 +49,7 @@ A 2D pixel-art roguelite action-platformer (Dead Cells-like) in **Godot 4.7.1 / 
 - `combat/` WeaponData/AttackStep (data-driven weapons), Health/Hitbox/Hurtbox (shared damage pipeline).
 - `level/` room_chunk.gd (ASCII-map chunks), `generator/stage_generator.gd`, tileset_builder.gd, stage.gd+tscn, shop_stand.*, destructible_prop.gd + prop_health.gd (crates/barrels: solid to player via layer 11 prop_body, 1 hit or roll-through breaks, blast deals 12 to enemies in 30px; tall decor stays z=-1 visual-only), drops.gd + pickup.gd (crate drop table + pickups; autoload-free, runtime lookups).
 - `fx/juice.gd` (hitstop/trauma/particles/flash), `fx/sfx_builder.gd`.
-- `data/weapons/` sword.tres, dagger.tres. `data/biomes/greybox.tres`.
+- `data/weapons/` sword, dagger, spear (reach), greatsword (slow wide), axe (2-step heavy), hammer (single slam); `data/biomes/greybox.tres`.
 
 ## Hard-won gotchas (verified, don't relearn)
 
@@ -71,6 +71,8 @@ A 2D pixel-art roguelite action-platformer (Dead Cells-like) in **Godot 4.7.1 / 
 - .tscn property lines don't take inline `#` comments (parser risk) — keep comments in gd files.
 - An infinite `set_loops()` tween bound to the WRONG node outlives freed targets; they collapse to 0 duration → "Infinite loop detected". Bind looping tweens to the node that owns the targets (`pickup.create_tween()`).
 - Never `add_child` a collision-bearing node inside a physics signal (body_entered, hitbox dispatch): shape creation/monitoring mid-flush errors ("Can't change this state while flushing queries"). `call_deferred` the spawn (see destructible_prop's drop roll + pickup's swap-drop).
+- Autoload `_ready` (e.g. SaveStub.load_data) runs AFTER a `--script` main loop's `_initialize` — mutate autoload state from frame 1+, never in `_initialize`.
+- `SaveStub.flush()` is a headless no-op so tests never touch the real user://save.json.
 
 ## Conventions / decisions
 

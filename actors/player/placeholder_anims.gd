@@ -23,6 +23,16 @@ static func build(anim_player: AnimationPlayer) -> void:
 	# axe: two slow heavy chops (2-step chain), same art held longer
 	lib.add_animation(&"axe_1", _swing(0.50, 0.16, 0.32))
 	lib.add_animation(&"axe_2", _swing(0.62, 0.22, 0.40))
+	# spear: quick pokes, long reach (hitbox does the reaching, not the art)
+	lib.add_animation(&"spear_1", _swing(0.30, 0.10, 0.20))
+	lib.add_animation(&"spear_2", _swing(0.26, 0.08, 0.17))
+	lib.add_animation(&"spear_3", _swing(0.40, 0.13, 0.24))
+	# greatsword: slow wide arcs
+	lib.add_animation(&"greatsword_1", _swing(0.44, 0.14, 0.26))
+	lib.add_animation(&"greatsword_2", _swing(0.40, 0.12, 0.24))
+	lib.add_animation(&"greatsword_3", _swing(0.58, 0.18, 0.32))
+	# hammer: one committed slam (single-step chain)
+	lib.add_animation(&"hammer_1", _swing(0.70, 0.26, 0.42))
 	anim_player.add_animation_library(&"", lib)
 
 

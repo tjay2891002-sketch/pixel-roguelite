@@ -1,0 +1,46 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://combat/weapon_data.gd" id="1"]
+[ext_resource type="Script" path="res://combat/attack_step.gd" id="2"]
+
+[sub_resource type="Resource" id="AttackStep_1"]
+script = ExtResource("2")
+animation = &"spear_1"
+damage = 7
+poise_damage = 6.0
+knockback = Vector2(50, -15)
+lunge = 70.0
+hitbox_size = Vector2(32, 10)
+hitbox_offset = Vector2(22, 0)
+chain_window_start = 0.10
+roll_cancel_start = 0.14
+
+[sub_resource type="Resource" id="AttackStep_2"]
+script = ExtResource("2")
+animation = &"spear_2"
+damage = 7
+poise_damage = 6.0
+knockback = Vector2(50, -15)
+lunge = 70.0
+hitbox_size = Vector2(32, 10)
+hitbox_offset = Vector2(22, 0)
+chain_window_start = 0.09
+roll_cancel_start = 0.12
+
+[sub_resource type="Resource" id="AttackStep_3"]
+script = ExtResource("2")
+animation = &"spear_3"
+damage = 11
+poise_damage = 10.0
+knockback = Vector2(90, -25)
+lunge = 90.0
+hitbox_size = Vector2(34, 10)
+hitbox_offset = Vector2(23, 0)
+chain_window_start = 0.14
+roll_cancel_start = 0.20
+
+[resource]
+script = ExtResource("1")
+id = &"spear"
+display_name = "Spear"
+steps = Array[Resource]([SubResource("AttackStep_1"), SubResource("AttackStep_2"), SubResource("AttackStep_3")])
