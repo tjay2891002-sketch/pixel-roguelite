@@ -9,6 +9,7 @@ const GreyboxBiome := preload("res://data/biomes/greybox.tres")
 const SFX := preload("res://fx/sfx_builder.gd")
 const ShopStand := preload("res://level/shop_stand.tscn")
 const Drops := preload("res://level/drops.gd")
+const BossScene := preload("res://actors/enemies/boss.tscn")
 const DestructibleProp := preload("res://level/destructible_prop.gd")
 const PROPS := [
 	preload("res://assets/level/tiles/prop_barrel.png"),
@@ -52,6 +53,7 @@ var _pending_blockers: Array = [] # blockers waiting for the player to step clea
 var _state_name := "Idle"
 var _rng: RandomNumberGenerator
 var _status_sig := "" # status-row rebuild gate: only on change
+var _boss = null # the boss whose bar is showing (freed after the kill)
 
 @onready var _debug_label: Label = $HUD/DebugLabel
 @onready var _hp_fill: TextureRect = $HUD/HpBarFill
@@ -66,6 +68,8 @@ var _status_sig := "" # status-row rebuild gate: only on change
 @onready var _pause_overlay: CanvasLayer = $PauseOverlay
 @onready var _pause_text: Label = $PauseOverlay/PauseText
 @onready var _juice: Node = $Juice
+@onready var _boss_bar: Control = $HUD/BossBar
+@onready var _boss_fill: ColorRect = $HUD/BossBar/BossBarFill
 
 
 func _ready() -> void:
@@ -105,6 +109,10 @@ func _process(_delta: float) -> void:
 		var atk := int(player.weapon.steps[0].damage * player.damage_mult)
 		_info_label.text = "stage: %d   %s (%d)" % [stage_index + 1, player.weapon.display_name, atk]
 		_update_status_row()
+		if _boss_bar.visible and is_instance_valid(_boss):
+			# 200px bar, bottom-center of the 480x270 viewport
+			_boss_fill.offset_right = 140.0 + 200.0 * clampf(
+				float(_boss.health.hp) / _boss.health.max_hp, 0.0, 1.0)
 		_debug_label.text = "state: %s   hp: %d   fps: %d" % [
 			_state_name, player.health.hp, Engine.get_frames_per_second()]
 
@@ -142,6 +150,8 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _build_stage() -> void:
+	_boss = null
+	_boss_bar.visible = false
 	_rng = RunManager.stage_rng(stage_index)
 	# difficulty curve: from stage 3, an extra combat room per stage before
 	# the boss room (duplicate + copy the array so the base config is untouched)
@@ -176,6 +186,8 @@ func _setup_room(pl: Dictionary, path_index: int) -> void:
 		"blockers": [] as Array,
 		"cleared": false,
 		"locked": false,
+		"boss": null,             # role 4: the boss actor
+		"boss_flags": [] as Array, # role 4: door flag polys (gold when open)
 	}
 	_rooms.append(room)
 
@@ -198,7 +210,10 @@ func _setup_room(pl: Dictionary, path_index: int) -> void:
 		_make_blockers(room, pl)
 		_make_lock_trigger(room)
 	elif pl.role == 4: # BOSS
-		_make_boss_door(pl)
+		_spawn_boss(room, pl)
+		_make_blockers(room, pl) # the fight locks the player IN with the boss
+		_make_lock_trigger(room)
+		_make_boss_door(room, pl)
 	if pl.role == 2: # SHOP
 		_make_shop(pl)
 	elif pl.role in [3, 5]: # TREASURE / BRANCH
@@ -241,6 +256,18 @@ func _scatter_props(room: Dictionary, pl: Dictionary) -> void:
 			sprite.z_index = -1
 			add_child(sprite)
 			sprite.position = Vector2(px, floor_top - tex.get_height() / 2.0)
+
+
+## The boss: one Gatekeeper at the room's center floor. It joins
+## room.enemies, so the standard kill path clears/unlocks the room.
+func _spawn_boss(room: Dictionary, pl: Dictionary) -> void:
+	var boss := BossScene.instantiate()
+	add_child(boss)
+	var floor_top: float = pl.pos.y + (pl.chunk.cell_size().y - 1) * TILE
+	boss.global_position = Vector2(pl.pos.x + room.bounds.size.x * 0.5, floor_top - 18.0)
+	boss.set(&"room_bounds", room.bounds)
+	room.enemies.append(boss)
+	room.boss = boss
 
 
 ## Budgeted archetype spawning (M4): budget = chunk budget + distance from
@@ -385,7 +412,7 @@ func _make_blockers(room: Dictionary, pl: Dictionary) -> void:
 		room.blockers.append({"body": blocker, "shape": shape, "vis": vis})
 
 
-func _make_boss_door(pl: Dictionary) -> void:
+func _make_boss_door(room: Dictionary, pl: Dictionary) -> void:
 	for marker in pl.chunk.spawn_points(&"B"):
 		var area := Area2D.new()
 		area.collision_layer = 256
@@ -403,7 +430,8 @@ func _make_boss_door(pl: Dictionary) -> void:
 		area.add_child(flag)
 		add_child(area)
 		area.global_position = marker.global_position
-		area.body_entered.connect(_on_boss_door_entered)
+		area.body_entered.connect(_on_boss_door_entered.bind(room))
+		room.boss_flags.append(flag)
 
 
 # --- signals -----------------------------------------------------------------
@@ -420,12 +448,15 @@ func _on_room_bounds_exited(_body: Node2D, room: Dictionary) -> void:
 
 
 func _on_lock_trigger_entered(_body: Node2D, room: Dictionary) -> void:
-	if room.role == 1 and not room.cleared and not room.enemies.is_empty():
+	if room.role in [1, 4] and not room.cleared and not room.enemies.is_empty():
 		_set_room_locked(room, true)
 
 
 func _on_enemy_killed(enemy: Node2D) -> void:
-	RunManager.add_xp(int(enemy.get("xp_value") or 0))
+	# NOTE: `get(...) or 0` would be a BOOL op in GDScript (40 or 0 -> true ->
+	# int(true) = 1 xp — the boss paid out 1 xp until boss_test caught it)
+	var xp_val = enemy.get("xp_value")
+	RunManager.add_xp(int(xp_val) if xp_val != null else 0)
 	for room in _rooms:
 		if room.enemies.has(enemy):
 			room.enemies.erase(enemy)
@@ -434,10 +465,16 @@ func _on_enemy_killed(enemy: Node2D) -> void:
 				_set_room_locked(room, false)
 				EventBus.room_cleared.emit(room.chunk)
 				AudioBus.play_sfx(SFX.unlock(), player.global_position)
+				# the boss door turns gold once the room is cleared
+				for flag in room.boss_flags:
+					flag.color = Color("ffd54a")
 			return
 
 
-func _on_boss_door_entered(_body: Node2D) -> void:
+func _on_boss_door_entered(_body: Node2D, room: Dictionary) -> void:
+	if room.role == 4 and not room.cleared:
+		AudioBus.play_sfx(SFX.deny(), player.global_position)
+		return
 	_regenerate.call_deferred()
 
 
@@ -533,6 +570,14 @@ func _apply_camera_bounds(rect: Rect2) -> void:
 
 func _set_room_locked(room: Dictionary, locked: bool) -> void:
 	room.locked = locked
+	# the boss bar rides the fight's lock state
+	if room.role == 4:
+		if locked:
+			_boss = room.boss
+			_boss_bar.visible = true
+		elif room.cleared:
+			_boss_bar.visible = false
+			_boss = null
 	for blocker in room.blockers:
 		if locked and _blocker_overlaps_player(blocker):
 			# player is standing in the doorway — close it once they step clear

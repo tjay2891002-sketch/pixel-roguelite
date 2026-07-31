@@ -21,6 +21,7 @@ A 2D pixel-art roguelite action-platformer (Dead Cells-like) in **Godot 4.7.1 / 
 - **Audio**: village BGM (Music bus), combat hit=`Sword Impact`, swing=`sfx_swing_1/2/3.ogg` — one whoosh per combo step (split from freesound "Whoosh Triple", peaks normalized, attack.gd adds a pitch ladder 1.0/1.06/0.94 so the finisher reads heavier), other SFX procedural in `fx/sfx_builder.gd`.
 - **Props**: crates/barrels destructible (solid to player, roll-through smashes, 12 dmg blast vs enemies); sign/street-lamp decor z=-1 behind actors (was blocking the view).
 - **Progression**: kill XP → levels on RunManager (+8% damage, +4 max hp & small heal per level; HUD shows a blue XP bar + Lv label); crates drop weapon-swap (pool: sword/dagger/NEW heavy axe — walk-up + F to swap, old weapon drops aside) / heal potion 30% / rage+swift buffs / curse debuff / cells (`level/drops.gd` table, `level/pickup.gd`). Shop buys also moved to F. HUD: weapon line shows attack power in parens (step-1 dmg × mults); StatusRow shows colored buff chips with countdowns, hidden when none active. Potions + rage/swift are F-confirm too (leave them on the floor for later); cells auto-collect, curse stays a contact landmine by design. Props never scatter onto T markers (a solid crate on a stand shoved the player out of range — stage_test flake).
+- **Boss**: the Gatekeeper (`actors/enemies/boss.tscn` + `boss_brain.gd` child, heavy art at 1.6x). Entering the boss room locks the player in and shows the bottom GATEKEEPER bar; <=50% hp enrages (1.8x speed, 0.65x telegraph, red tint + roar, alternating melee/Ball volleys). Kill (120 hp, 40 xp) clears the room, turns the door flag gold, and only THEN does the boss door advance the stage (touch while alive = deny buzz).
 
 ## 当前任务清单 / Task List
 
@@ -34,8 +35,9 @@ A 2D pixel-art roguelite action-platformer (Dead Cells-like) in **Godot 4.7.1 / 
 | ✅ | 可破坏道具 | 箱子/木桶：碰撞+可破坏+对敌爆破；高装饰物移到角色下层 |
 | ✅ | 升级 + 掉落 | 杀怪得经验升级（加攻/加血）；箱子掉武器（新重斧）/药瓶/buff/curse/细胞 |
 | ✅ | 武器解锁池 | 6 武器（剑/匕/枪/巨剑/斧/锤）；商店卖解锁（细胞付费，SaveStub 持久化），已解锁才进掉落池；暂停菜单可见已解锁 |
+| ✅ | Boss 战 | Gatekeeper：进房锁门+大血条，半血狂暴（提速+弹幕交替），击破后开门进下一层 |
 | ✅ | 连续性 | 记忆文件 + 本文档 |
-| 📋 P1 | Boss 战 | 在 boss 房间放一个 Boss 敌人（大血条+多阶段），打通 stage→stage 的瓶颈 |
+
 | 📋 P2 | Sunny Land 弹簧机关 | mushroom-spring 素材已备，做弹跳平台 |
 | 📋 P2 | biome 变体 | 第二个 BiomeConfig（新 tileset + 新敌人组合），验证生成器通用性 |
 | 📋 P3 | meta 进度 UI | SaveStub 已埋点；永久解锁界面（Delve-bound 才有意义，先 fun） |
@@ -73,6 +75,8 @@ A 2D pixel-art roguelite action-platformer (Dead Cells-like) in **Godot 4.7.1 / 
 - Never `add_child` a collision-bearing node inside a physics signal (body_entered, hitbox dispatch): shape creation/monitoring mid-flush errors ("Can't change this state while flushing queries"). `call_deferred` the spawn (see destructible_prop's drop roll + pickup's swap-drop).
 - Autoload `_ready` (e.g. SaveStub.load_data) runs AFTER a `--script` main loop's `_initialize` — mutate autoload state from frame 1+, never in `_initialize`.
 - `SaveStub.flush()` AND `load_data()` are headless no-ops: tests never touch the real user://save.json, and a late `load_data` replacing `data` mid-test can't wipe test state (stage_test treasure flake).
+- `obj.get("x") or default` is a BOOL op in GDScript (`40 or 0` → `true` → `int(true)` = 1 — the boss paid 1 xp instead of 40). Use `v if v != null else default`.
+- Children are ready BEFORE the parent: a child component can't read the parent's `@onready` vars in its own `_ready` — `get_node()` directly (boss_brain reads Health this way).
 
 ## Conventions / decisions
 

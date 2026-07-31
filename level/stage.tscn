@@ -79,6 +79,32 @@ offset_left = 8.0
 offset_top = 80.0
 theme_override_constants/separation = 6
 
+[node name="BossBar" type="Control" parent="HUD"]
+visible = false
+
+[node name="BossName" type="Label" parent="HUD/BossBar"]
+offset_left = 140.0
+offset_top = 232.0
+offset_right = 340.0
+offset_bottom = 242.0
+theme_override_font_sizes/font_size = 8
+text = "GATEKEEPER"
+horizontal_alignment = 1
+
+[node name="BossBarBack" type="ColorRect" parent="HUD/BossBar"]
+offset_left = 140.0
+offset_top = 244.0
+offset_right = 340.0
+offset_bottom = 250.0
+color = Color(0.12, 0.05, 0.07, 1)
+
+[node name="BossBarFill" type="ColorRect" parent="HUD/BossBar"]
+offset_left = 140.0
+offset_top = 244.0
+offset_right = 340.0
+offset_bottom = 250.0
+color = Color(0.83, 0.23, 0.23, 1)
+
 [node name="DebugLabel" type="Label" parent="HUD"]
 visible = false
 offset_left = 8.0

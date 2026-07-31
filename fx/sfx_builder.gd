@@ -25,6 +25,7 @@ static func deny() -> AudioStreamWAV: return _cached(&"deny", _tone(120.0, 90.0,
 static func heal() -> AudioStreamWAV: return _cached(&"heal", _tone(520.0, 780.0, 0.14, 0.45))
 static func buff() -> AudioStreamWAV: return _cached(&"buff", _tone(440.0, 660.0, 0.12, 0.4))
 static func levelup() -> AudioStreamWAV: return _cached(&"levelup", _tone(660.0, 1320.0, 0.2, 0.45))
+static func roar() -> AudioStreamWAV: return _cached(&"roar", _tone(90.0, 55.0, 0.35, 0.6))
 
 
 static func _cached(key: StringName, stream: AudioStreamWAV) -> AudioStreamWAV:
