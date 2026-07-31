@@ -9,6 +9,7 @@ extends StaticBody2D
 
 const HurtboxScript := preload("res://combat/hurtbox.gd")
 const PropHealthScript := preload("res://level/prop_health.gd")
+const Drops := preload("res://level/drops.gd")
 
 const BLAST_RADIUS := 30.0
 const BLAST_DAMAGE := 12
@@ -105,6 +106,7 @@ func _on_broke() -> void:
 	$Hurtbox.set_deferred(&"monitoring", false)
 	$RollZone.set_deferred(&"monitoring", false)
 	_debris()
+	Drops.roll_crate_drop(get_parent(), global_position + Vector2(0.0, -8.0))
 	call_deferred(&"_blast")
 
 

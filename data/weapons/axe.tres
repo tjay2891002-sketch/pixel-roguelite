@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://combat/weapon_data.gd" id="1"]
+[ext_resource type="Script" path="res://combat/attack_step.gd" id="2"]
+
+[sub_resource type="Resource" id="AttackStep_1"]
+script = ExtResource("2")
+animation = &"axe_1"
+damage = 14
+poise_damage = 12.0
+knockback = Vector2(100, -30)
+lunge = 100.0
+hitbox_size = Vector2(26, 14)
+hitbox_offset = Vector2(15, 0)
+chain_window_start = 0.18
+roll_cancel_start = 0.24
+
+[sub_resource type="Resource" id="AttackStep_2"]
+script = ExtResource("2")
+animation = &"axe_2"
+damage = 20
+poise_damage = 18.0
+knockback = Vector2(170, -60)
+lunge = 120.0
+hitbox_size = Vector2(30, 14)
+hitbox_offset = Vector2(16, 0)
+chain_window_start = 0.22
+roll_cancel_start = 0.28
+
+[resource]
+script = ExtResource("1")
+id = &"axe"
+display_name = "Heavy Axe"
+steps = Array[Resource]([SubResource("AttackStep_1"), SubResource("AttackStep_2")])

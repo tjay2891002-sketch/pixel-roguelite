@@ -68,6 +68,7 @@ func _ready() -> void:
 	RunManager.start_run()
 	EventBus.enemy_killed.connect(_on_enemy_killed)
 	EventBus.player_died.connect(_on_player_died)
+	EventBus.leveled_up.connect(_on_leveled_up)
 	_setup_background()
 	_build_stage()
 	if not _title_shown_once:
@@ -91,7 +92,9 @@ func _process(_delta: float) -> void:
 		# golden fill clipped by hp (44px full bar starting at left edge 16)
 		_hp_fill.offset_right = 16.0 + 44.0 * (float(player.health.hp) / player.health.max_hp)
 		_cell_label.text = "x %d" % int(SaveStub.data.get("currency", 0))
-		_info_label.text = "stage: %d   %s" % [stage_index + 1, player.weapon.display_name]
+		_info_label.text = "stage: %d   %s   Lv%d (%d/%d xp)" % [
+			stage_index + 1, player.weapon.display_name,
+			RunManager.level, RunManager.xp, RunManager.xp_needed()]
 		_debug_label.text = "state: %s   hp: %d   fps: %d" % [
 			_state_name, player.health.hp, Engine.get_frames_per_second()]
 
@@ -391,6 +394,7 @@ func _on_lock_trigger_entered(_body: Node2D, room: Dictionary) -> void:
 
 
 func _on_enemy_killed(enemy: Node2D) -> void:
+	RunManager.add_xp(int(enemy.get("xp_value") or 0))
 	for room in _rooms:
 		if room.enemies.has(enemy):
 			room.enemies.erase(enemy)
@@ -404,6 +408,10 @@ func _on_enemy_killed(enemy: Node2D) -> void:
 
 func _on_boss_door_entered(_body: Node2D) -> void:
 	_regenerate.call_deferred()
+
+
+func _on_leveled_up(_lvl: int) -> void:
+	AudioBus.play_sfx(SFX.levelup(), player.global_position)
 
 
 func _on_player_died() -> void:

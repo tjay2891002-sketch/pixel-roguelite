@@ -20,6 +20,7 @@ A 2D pixel-art roguelite action-platformer (Dead Cells-like) in **Godot 4.7.1 / 
 - **Art (all real)**: player fighter, rat, spitter+Ball, heavy, eagle, GothicVania tiles+parallax bg, Gothic HUD, Gothic pause menu, shop stands, room props.
 - **Audio**: village BGM (Music bus), combat hit=`Sword Impact`, swing=`sfx_swing_1/2/3.ogg` — one whoosh per combo step (split from freesound "Whoosh Triple", peaks normalized, attack.gd adds a pitch ladder 1.0/1.06/0.94 so the finisher reads heavier), other SFX procedural in `fx/sfx_builder.gd`.
 - **Props**: crates/barrels destructible (solid to player, roll-through smashes, 12 dmg blast vs enemies); sign/street-lamp decor z=-1 behind actors (was blocking the view).
+- **Progression**: kill XP → levels on RunManager (+8% damage, +4 max hp & small heal per level); crates drop weapon-swap (pool: sword/dagger/NEW heavy axe) / heal potion 30% / rage+swift buffs / curse debuff / cells (`level/drops.gd` table, `level/pickup.gd`).
 
 ## 当前任务清单 / Task List
 
@@ -31,9 +32,10 @@ A 2D pixel-art roguelite action-platformer (Dead Cells-like) in **Godot 4.7.1 / 
 | ✅ | 美术迁移 | 主角+四类敌人+地块+背景+道具+UI+商店 |
 | ✅ | 音频迁移 | BGM + 打击/挥击真实采样 |
 | ✅ | 可破坏道具 | 箱子/木桶：碰撞+可破坏+对敌爆破；高装饰物移到角色下层 |
+| ✅ | 升级 + 掉落 | 杀怪得经验升级（加攻/加血）；箱子掉武器（新重斧）/药瓶/buff/curse/细胞 |
 | ✅ | 连续性 | 记忆文件 + 本文档 |
 | 📋 P1 | Boss 战 | 在 boss 房间放一个 Boss 敌人（大血条+多阶段），打通 stage→stage 的瓶颈 |
-| 📋 P1 | 武器池 + 随机掉落 | WeaponData.id 已就绪；按用户要求「已解锁武器随机掉」 |
+| 📋 P2 | 武器解锁池 | 掉落已做（3 武器）；「已解锁才掉」依赖 P3 meta UI |
 | 📋 P2 | Sunny Land 弹簧机关 | mushroom-spring 素材已备，做弹跳平台 |
 | 📋 P2 | biome 变体 | 第二个 BiomeConfig（新 tileset + 新敌人组合），验证生成器通用性 |
 | 📋 P3 | meta 进度 UI | SaveStub 已埋点；永久解锁界面（Delve-bound 才有意义，先 fun） |
@@ -45,7 +47,7 @@ A 2D pixel-art roguelite action-platformer (Dead Cells-like) in **Godot 4.7.1 / 
 - `actors/player/` player.gd + `state_machine/` + `states/`; sprite anims `player_anims.gd`, attack clips `placeholder_anims.gd`.
 - `actors/enemies/` shared `enemy.gd` (+ per-archetype `*_anims.gd`, scenes, `states/`, `projectile.tscn`).
 - `combat/` WeaponData/AttackStep (data-driven weapons), Health/Hitbox/Hurtbox (shared damage pipeline).
-- `level/` room_chunk.gd (ASCII-map chunks), `generator/stage_generator.gd`, tileset_builder.gd, stage.gd+tscn, shop_stand.*, destructible_prop.gd + prop_health.gd (crates/barrels: solid to player via layer 11 prop_body, 1 hit or roll-through breaks, blast deals 12 to enemies in 30px; tall decor stays z=-1 visual-only).
+- `level/` room_chunk.gd (ASCII-map chunks), `generator/stage_generator.gd`, tileset_builder.gd, stage.gd+tscn, shop_stand.*, destructible_prop.gd + prop_health.gd (crates/barrels: solid to player via layer 11 prop_body, 1 hit or roll-through breaks, blast deals 12 to enemies in 30px; tall decor stays z=-1 visual-only), drops.gd + pickup.gd (crate drop table + pickups; autoload-free, runtime lookups).
 - `fx/juice.gd` (hitstop/trauma/particles/flash), `fx/sfx_builder.gd`.
 - `data/weapons/` sword.tres, dagger.tres. `data/biomes/greybox.tres`.
 

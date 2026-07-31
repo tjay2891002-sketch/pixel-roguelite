@@ -20,3 +20,7 @@ signal player_died
 ## Emitted when currency is dropped/collected. The meta-progression seam —
 ## SaveStub accumulates; nothing else builds on this yet.
 signal currency_dropped(amount: int, world_position: Vector2)
+
+## Emitted by RunManager when the player levels up. Player (stats), stage
+## (SFX/HUD) listen.
+signal leveled_up(level: int)

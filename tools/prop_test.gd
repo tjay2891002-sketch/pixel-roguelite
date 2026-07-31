@@ -9,6 +9,7 @@ extends SceneTree
 ## Run: godot --headless --path <project> --script res://tools/prop_test.gd
 
 const DestructibleProp := preload("res://level/destructible_prop.gd")
+const Drops := preload("res://level/drops.gd")
 const CRATE_TEX := preload("res://assets/level/tiles/prop_crate.png")
 
 var _frame := 0
@@ -21,6 +22,8 @@ var _failures: Array[String] = []
 
 
 func _initialize() -> void:
+	# drops get their own test (drops_test.gd); keep this one deterministic
+	Drops.auto_drops_enabled = false
 	var scene: PackedScene = load("res://level/playground.tscn")
 	root.add_child(scene.instantiate())
 	_player = root.get_node("Playground/Player")

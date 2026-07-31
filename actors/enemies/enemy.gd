@@ -23,6 +23,7 @@ signal state_changed(state_name: StringName)
 @export var swoop_speed := 220.0       # flyer
 @export var swoop_time := 0.35         # flyer
 @export var swoop_cooldown := 1.2      # flyer: seconds between swoops
+@export var xp_value := 5              # RunManager XP on kill (dummy: 0)
 @export var attack_state := &"Attack"  # state entered after Telegraph (spitter: RangedAttack, flyer: Swoop)
 @export var aim_mode := &""            # telegraph warning: "shot" (aim line) | "dash" (path preview) | "" (none)
 

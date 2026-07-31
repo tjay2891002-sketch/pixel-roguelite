@@ -20,6 +20,9 @@ static func build(anim_player: AnimationPlayer) -> void:
 	lib.add_animation(&"dagger_1", _swing(0.24, 0.06, 0.14))
 	lib.add_animation(&"dagger_2", _swing(0.20, 0.05, 0.12))
 	lib.add_animation(&"dagger_3", _swing(0.30, 0.09, 0.20))
+	# axe: two slow heavy chops (2-step chain), same art held longer
+	lib.add_animation(&"axe_1", _swing(0.50, 0.16, 0.32))
+	lib.add_animation(&"axe_2", _swing(0.62, 0.22, 0.40))
 	anim_player.add_animation_library(&"", lib)
 
 

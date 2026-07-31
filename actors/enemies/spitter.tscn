@@ -31,6 +31,7 @@ attack_range = 70.0
 telegraph_time = 0.6
 attack_recovery_time = 1.0
 swipe_damage = 5
+xp_value = 7
 attack_state = &"RangedAttack"
 aim_mode = &"shot"
 sprite_set = "spitter"

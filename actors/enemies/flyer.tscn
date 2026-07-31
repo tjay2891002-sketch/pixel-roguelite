@@ -36,6 +36,7 @@ swipe_damage = 5
 swipe_poise_damage = 8.0
 flying = true
 knockback_resist = 0.8
+xp_value = 8
 swoop_speed = 190.0
 attack_state = &"Swoop"
 aim_mode = &"dash"

@@ -99,7 +99,7 @@ func _configure_hitbox() -> void:
 	player.hitbox.position = Vector2(_step.hitbox_offset.x * player.facing, _step.hitbox_offset.y)
 	player.current_lunge = _step.lunge
 	player.current_hit_info = {
-		&"damage": _step.damage,
+		&"damage": int(_step.damage * player.damage_mult),
 		&"poise_damage": _step.poise_damage,
 		&"knockback": Vector2(_step.knockback.x * player.facing, _step.knockback.y),
 		&"attacker": player,

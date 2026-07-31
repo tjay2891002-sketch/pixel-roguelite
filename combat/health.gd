@@ -46,7 +46,12 @@ func take_hit(hit_info: Dictionary) -> bool:
 	if _grace > 0.0 or hp <= 0:
 		return false
 	last_hit_info = hit_info
-	hp -= int(hit_info.get(&"damage", 0))
+	var damage := int(hit_info.get(&"damage", 0))
+	# victim-side multiplier (player curse debuff); absent on enemies = 1.0
+	var taken_mult = get_parent().get("damage_taken_mult")
+	if taken_mult != null:
+		damage = int(damage * float(taken_mult))
+	hp -= damage
 	poise -= float(hit_info.get(&"poise_damage", 0.0))
 	_grace = grace_time
 	_since_hit = 0.0

@@ -53,6 +53,27 @@ const X_CENTER_OFFSET := 10.5
 @export_group("Combat")
 @export var weapon: WeaponData
 
+## Level-up growth (level lives on RunManager): applied on _ready and live
+## on leveled_up. BASE_MAX_HP mirrors player.tscn's Health max_hp.
+const BASE_MAX_HP := 30
+const LEVEL_DAMAGE_STEP := 0.08
+const LEVEL_HP_STEP := 4
+
+## Stat multipliers — read by attack.gd (damage), steer() (speed),
+## health.gd (damage taken). Recomputed by _refresh_mults().
+var damage_mult := 1.0
+var speed_mult := 1.0
+var damage_taken_mult := 1.0
+
+## Timed buffs from crate drops (curse is a debuff on purpose). id ->
+## seconds remaining; stacking the same id refreshes its duration.
+const BUFFS := {
+	&"rage": {&"stat": &"damage_mult", &"mult": 1.35, &"duration": 20.0, &"color": Color("ef5350")},
+	&"swift": {&"stat": &"speed_mult", &"mult": 1.30, &"duration": 20.0, &"color": Color("4dd0e1")},
+	&"curse": {&"stat": &"damage_taken_mult", &"mult": 1.50, &"duration": 12.0, &"color": Color("ab47bc")},
+}
+var _buffs := {}
+
 var facing := 1
 var invulnerable := false               # true during Roll (states/tests read this)
 var iframes_left := 0.0                 # combat i-frames window in game-time seconds
@@ -95,6 +116,9 @@ func _ready() -> void:
 	PlaceholderAnims.build(anim_player)
 	health.poise_broken.connect(_on_poise_broken)
 	health.died.connect(_on_died)
+	EventBus.leveled_up.connect(_on_leveled_up)
+	_apply_level_stats()
+	_refresh_mults()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -107,6 +131,12 @@ func _physics_process(delta: float) -> void:
 	coyote_timer = maxf(coyote_timer - delta, 0.0)
 	jump_buffer_timer = maxf(jump_buffer_timer - delta, 0.0)
 	iframes_left = maxf(iframes_left - delta, 0.0)
+	if not _buffs.is_empty():
+		for id in _buffs.keys():
+			_buffs[id] -= delta
+			if _buffs[id] <= 0.0:
+				_buffs.erase(id)
+		_refresh_mults()
 	state_machine.physics_update(delta)
 	move_and_slide()
 	if is_on_floor():
@@ -133,10 +163,10 @@ func apply_gravity(delta: float, multiplier := 1.0) -> void:
 
 
 ## Accelerate velocity.x toward input * move_speed. States pass ground or air
-## constants depending on where the player is.
+## constants depending on where they are. speed_mult is the swift-buff hook.
 func steer(input_x: float, accel: float, decel: float, delta: float) -> void:
 	var rate := accel if input_x != 0.0 else decel
-	velocity.x = move_toward(velocity.x, input_x * move_speed, rate * delta)
+	velocity.x = move_toward(velocity.x, input_x * move_speed * speed_mult, rate * delta)
 	if input_x != 0.0:
 		set_facing(int(signf(input_x)))
 
@@ -244,6 +274,45 @@ func begin_attack_index() -> int:
 			and Time.get_ticks_msec() < combo_reset_at_msec:
 		return combo_step
 	return 0
+
+
+# --- Progression (level + buffs + weapon swaps) ------------------------------
+
+## Weapon pickup: swap in the new weapon, dropping the combo state so a
+## mid-chain index can't point past the new weapon's steps.
+func equip(new_weapon: WeaponData) -> void:
+	weapon = new_weapon
+	attack_step_index = 0
+	combo_step = 0
+	current_lunge = 0.0
+
+
+func apply_buff(id: StringName) -> void:
+	if not BUFFS.has(id):
+		return
+	_buffs[id] = BUFFS[id][&"duration"]
+	_refresh_mults()
+
+
+func _refresh_mults() -> void:
+	damage_mult = 1.0 + LEVEL_DAMAGE_STEP * (RunManager.level - 1)
+	speed_mult = 1.0
+	damage_taken_mult = 1.0
+	for id in _buffs:
+		var b: Dictionary = BUFFS[id]
+		set(b[&"stat"], get(b[&"stat"]) * float(b[&"mult"]))
+
+
+func _apply_level_stats() -> void:
+	health.max_hp = BASE_MAX_HP + LEVEL_HP_STEP * (RunManager.level - 1)
+	health.hp = mini(health.hp, health.max_hp)
+
+
+func _on_leveled_up(_lvl: int) -> void:
+	_apply_level_stats()
+	# a level also patches you up a little — the heal reads as a reward
+	health.hp = mini(health.hp + LEVEL_HP_STEP, health.max_hp)
+	_refresh_mults()
 
 
 func _on_poise_broken() -> void:

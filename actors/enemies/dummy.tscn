@@ -20,6 +20,7 @@ collision_mask = 263
 floor_snap_length = 4.0
 script = ExtResource("1")
 move_speed = 0.0
+xp_value = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_body")

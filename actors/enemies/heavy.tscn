@@ -37,6 +37,7 @@ swipe_damage = 12
 swipe_poise_damage = 16.0
 swipe_knockback = Vector2(140, -40)
 knockback_resist = 0.25
+xp_value = 12
 sprite_set = "heavy"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
