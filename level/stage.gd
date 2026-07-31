@@ -50,6 +50,7 @@ var _rooms: Array = [] # per-placement runtime records
 var _pending_blockers: Array = [] # blockers waiting for the player to step clear
 var _state_name := "Idle"
 var _rng: RandomNumberGenerator
+var _status_sig := "" # status-row rebuild gate: only on change
 
 @onready var _debug_label: Label = $HUD/DebugLabel
 @onready var _hp_fill: TextureRect = $HUD/HpBarFill
@@ -57,6 +58,7 @@ var _rng: RandomNumberGenerator
 @onready var _lv_label: Label = $HUD/LvLabel
 @onready var _cell_label: Label = $HUD/CellLabel
 @onready var _info_label: Label = $HUD/InfoLabel
+@onready var _status_row: HBoxContainer = $HUD/StatusRow
 @onready var _title_overlay: CanvasLayer = $TitleOverlay
 @onready var _death_overlay: CanvasLayer = $DeathOverlay
 @onready var _death_text: Label = $DeathOverlay/DeathText
@@ -97,7 +99,11 @@ func _process(_delta: float) -> void:
 		_xp_fill.offset_right = 16.0 + 44.0 * (float(RunManager.xp) / RunManager.xp_needed())
 		_lv_label.text = "Lv%d" % RunManager.level
 		_cell_label.text = "x %d" % int(SaveStub.data.get("currency", 0))
-		_info_label.text = "stage: %d   %s" % [stage_index + 1, player.weapon.display_name]
+		# attack power in parens next to the weapon: step-1 damage with the
+		# current mults (level + rage) folded in
+		var atk := int(player.weapon.steps[0].damage * player.damage_mult)
+		_info_label.text = "stage: %d   %s (%d)" % [stage_index + 1, player.weapon.display_name, atk]
+		_update_status_row()
 		_debug_label.text = "state: %s   hp: %d   fps: %d" % [
 			_state_name, player.health.hp, Engine.get_frames_per_second()]
 
@@ -415,6 +421,28 @@ func _on_boss_door_entered(_body: Node2D) -> void:
 
 func _on_leveled_up(_lvl: int) -> void:
 	AudioBus.play_sfx(SFX.levelup(), player.global_position)
+
+
+## Crate-buff status chips ("RAGE 17" …), rebuilt only when the set or the
+## whole-second countdown changes; hidden entirely while no buff is active.
+func _update_status_row() -> void:
+	var buffs: Dictionary = player.active_buffs()
+	_status_row.visible = not buffs.is_empty()
+	var sig := ""
+	for id in buffs:
+		sig += "%s:%d;" % [id, ceili(buffs[id])]
+	if sig == _status_sig:
+		return
+	_status_sig = sig
+	for child in _status_row.get_children():
+		child.queue_free()
+	for id in buffs:
+		var b: Dictionary = player.BUFFS[id]
+		var chip := Label.new()
+		chip.text = "%s %d" % [b[&"tag"], ceili(buffs[id])]
+		chip.add_theme_font_size_override(&"font_size", 7)
+		chip.add_theme_color_override(&"font_color", b[&"color"])
+		_status_row.add_child(chip)
 
 
 func _on_player_died() -> void:

@@ -73,6 +73,12 @@ offset_top = 58.0
 theme_override_font_sizes/font_size = 8
 text = "stage: 1"
 
+[node name="StatusRow" type="HBoxContainer" parent="HUD"]
+visible = false
+offset_left = 8.0
+offset_top = 80.0
+theme_override_constants/separation = 6
+
 [node name="DebugLabel" type="Label" parent="HUD"]
 visible = false
 offset_left = 8.0

@@ -67,12 +67,18 @@ var damage_taken_mult := 1.0
 
 ## Timed buffs from crate drops (curse is a debuff on purpose). id ->
 ## seconds remaining; stacking the same id refreshes its duration.
+## tag/color drive the HUD status row (stage.gd).
 const BUFFS := {
-	&"rage": {&"stat": &"damage_mult", &"mult": 1.35, &"duration": 20.0, &"color": Color("ef5350")},
-	&"swift": {&"stat": &"speed_mult", &"mult": 1.30, &"duration": 20.0, &"color": Color("4dd0e1")},
-	&"curse": {&"stat": &"damage_taken_mult", &"mult": 1.50, &"duration": 12.0, &"color": Color("ab47bc")},
+	&"rage": {&"stat": &"damage_mult", &"mult": 1.35, &"duration": 20.0, &"color": Color("ef5350"), &"tag": "RAGE"},
+	&"swift": {&"stat": &"speed_mult", &"mult": 1.30, &"duration": 20.0, &"color": Color("4dd0e1"), &"tag": "SWIFT"},
+	&"curse": {&"stat": &"damage_taken_mult", &"mult": 1.50, &"duration": 12.0, &"color": Color("ab47bc"), &"tag": "CURSE"},
 }
 var _buffs := {}
+
+
+## The HUD status row reads this (id -> seconds remaining).
+func active_buffs() -> Dictionary:
+	return _buffs
 
 var facing := 1
 var invulnerable := false               # true during Roll (states/tests read this)

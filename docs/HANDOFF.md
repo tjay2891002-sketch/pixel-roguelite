@@ -20,7 +20,7 @@ A 2D pixel-art roguelite action-platformer (Dead Cells-like) in **Godot 4.7.1 / 
 - **Art (all real)**: player fighter, rat, spitter+Ball, heavy, eagle, GothicVania tiles+parallax bg, Gothic HUD, Gothic pause menu, shop stands, room props.
 - **Audio**: village BGM (Music bus), combat hit=`Sword Impact`, swing=`sfx_swing_1/2/3.ogg` — one whoosh per combo step (split from freesound "Whoosh Triple", peaks normalized, attack.gd adds a pitch ladder 1.0/1.06/0.94 so the finisher reads heavier), other SFX procedural in `fx/sfx_builder.gd`.
 - **Props**: crates/barrels destructible (solid to player, roll-through smashes, 12 dmg blast vs enemies); sign/street-lamp decor z=-1 behind actors (was blocking the view).
-- **Progression**: kill XP → levels on RunManager (+8% damage, +4 max hp & small heal per level; HUD shows a blue XP bar + Lv label); crates drop weapon-swap (pool: sword/dagger/NEW heavy axe — walk-up + F to swap, old weapon drops aside) / heal potion 30% / rage+swift buffs / curse debuff / cells (`level/drops.gd` table, `level/pickup.gd`). Shop buys also moved to F.
+- **Progression**: kill XP → levels on RunManager (+8% damage, +4 max hp & small heal per level; HUD shows a blue XP bar + Lv label); crates drop weapon-swap (pool: sword/dagger/NEW heavy axe — walk-up + F to swap, old weapon drops aside) / heal potion 30% / rage+swift buffs / curse debuff / cells (`level/drops.gd` table, `level/pickup.gd`). Shop buys also moved to F. HUD: weapon line shows attack power in parens (step-1 dmg × mults); StatusRow shows colored buff chips with countdowns, hidden when none active.
 
 ## 当前任务清单 / Task List
 
