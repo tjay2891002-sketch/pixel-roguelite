@@ -19,7 +19,8 @@ signal state_changed(state_name: StringName)
 @export var gravity := 900.0
 @export var flying := false            # flyers skip gravity entirely
 @export var knockback_resist := 1.0    # heavy: 0.25 — Health multiplies knockback by this
-@export var projectile_speed := 90.0   # spitter
+@export var projectile_speed := 90.0   # spitter / boss volley
+@export var volley_count := 1          # boss: 3-ball spread
 @export var swoop_speed := 220.0       # flyer
 @export var swoop_time := 0.35         # flyer
 @export var swoop_cooldown := 1.2      # flyer: seconds between swoops

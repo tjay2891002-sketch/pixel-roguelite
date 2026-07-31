@@ -51,6 +51,8 @@ func _physics_process(_delta: float) -> bool:
 		14:
 			_check(_boss.move_speed == 16.0, "phase 1 speed baseline", "speed=%.1f" % _boss.move_speed)
 			_check(_boss.attack_state == &"Attack", "phase 1 is melee", "state=%s" % _boss.attack_state)
+			_check(_boss.aim_mode == &"shot" and _boss.volley_count == 3,
+				"boss volley config: aim line + 3-ball spread", "")
 			_boss.health.take_hit({&"damage": 61, &"poise_damage": 0.0,
 				&"knockback": Vector2.ZERO, &"attacker": _player})
 		18:

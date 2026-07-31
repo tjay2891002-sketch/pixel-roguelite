@@ -11,11 +11,16 @@ func enter() -> void:
 	_timer = actor.telegraph_time
 	actor.velocity.x = 0.0
 	actor.face_target()
+	# the warning must match the INCOMING attack: a volley telegraph shows
+	# the aim line (below), not the melee arc (boss alternates the two)
 	var arc = actor.get_node_or_null("SlashPivot/SlashArc")
 	if arc:
-		arc.rotation = -1.2
-		arc.modulate.a = 0.35
-		arc.visible = true
+		if actor.attack_state == &"RangedAttack":
+			arc.visible = false
+		else:
+			arc.rotation = -1.2
+			arc.modulate.a = 0.35
+			arc.visible = true
 
 
 func exit() -> void:
@@ -32,8 +37,10 @@ func physics_update(delta: float) -> void:
 	# red blink — readable even in greybox
 	actor.visual.modulate = Color(1.0, 0.4, 0.4) if int(_timer * 12.0) % 2 == 0 else Color.WHITE
 	# attack warning lines (aim_mode): spitter aims at the player live,
-	# flyer previews its swoop path — both match what actually fires
-	if actor.aim_mode == &"shot" and actor.target:
+	# flyer previews its swoop path — both match what actually fires. The
+	# shot line only shows when a volley is actually incoming (the boss's
+	# melee telegraphs keep the arc instead).
+	if actor.aim_mode == &"shot" and actor.target and actor.attack_state == &"RangedAttack":
 		actor.update_aim_line(PackedVector2Array([
 			Vector2.ZERO, actor.target.global_position - actor.global_position]))
 	elif actor.aim_mode == &"dash" and actor.target:

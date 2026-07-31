@@ -41,6 +41,8 @@ swipe_poise_damage = 14.0
 swipe_knockback = Vector2(160, -50)
 knockback_resist = 0.1
 projectile_speed = 70.0
+volley_count = 3
+aim_mode = &"shot"
 xp_value = 40
 sprite_set = "heavy"
 
