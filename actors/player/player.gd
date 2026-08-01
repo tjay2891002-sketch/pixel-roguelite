@@ -70,9 +70,9 @@ var damage_taken_mult := 1.0
 ## seconds remaining; stacking the same id refreshes its duration.
 ## tag/color drive the HUD status row (stage.gd).
 const BUFFS := {
-	&"rage": {&"stat": &"damage_mult", &"mult": 1.35, &"duration": 20.0, &"color": Color("ef5350"), &"tag": "RAGE"},
-	&"swift": {&"stat": &"speed_mult", &"mult": 1.30, &"duration": 20.0, &"color": Color("4dd0e1"), &"tag": "SWIFT"},
-	&"curse": {&"stat": &"damage_taken_mult", &"mult": 1.50, &"duration": 12.0, &"color": Color("ab47bc"), &"tag": "CURSE"},
+	&"rage": {&"stat": &"damage_mult", &"mult": 1.35, &"duration": 20.0, &"color": Color("ef5350"), &"tag": "狂暴"},
+	&"swift": {&"stat": &"speed_mult", &"mult": 1.30, &"duration": 20.0, &"color": Color("4dd0e1"), &"tag": "疾速"},
+	&"curse": {&"stat": &"damage_taken_mult", &"mult": 1.50, &"duration": 12.0, &"color": Color("ab47bc"), &"tag": "诅咒"},
 }
 var _buffs := {}
 

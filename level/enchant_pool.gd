@@ -7,6 +7,7 @@ extends Area2D
 ## scene loads (stage), never through test --script preload chains.
 
 const SFX := preload("res://fx/sfx_builder.gd")
+const GameFont := preload("res://fx/game_font.gd")
 
 var _in_range := false
 var _prompt: Label
@@ -36,9 +37,10 @@ func _process(_delta: float) -> void:
 		return
 	var rank := RunManager.enchant_rank(player.weapon.id)
 	if rank >= RunManager.ENCHANT_MAX_RANK:
-		_prompt.text = "MAX"
+		_prompt.text = "已满级"
 	else:
-		_prompt.text = "[F] Enchant +%d (%d shards)" % [rank + 1, RunManager.enchant_cost(player.weapon.id)]
+		_prompt.text = "[F] 附魔 %s +%d（%d 魔晶）" % [
+			player.weapon.display_name, rank + 1, RunManager.enchant_cost(player.weapon.id)]
 
 
 func _on_proximity(body: Node2D, entered: bool) -> void:
@@ -91,9 +93,18 @@ func _build_visual() -> void:
 		Vector2(7, 2), Vector2(-7, 2)])
 	core.color = Color("80d8ff")
 	add_child(core)
+	# always-on caption so the pool reads from across the room
+	var caption := Label.new()
+	caption.text = "附魔池"
+	GameFont.apply(caption)
+	caption.add_theme_font_size_override(&"font_size", 7)
+	caption.add_theme_color_override(&"font_color", Color("80d8ff", 0.65))
+	caption.position = Vector2(-12, -16)
+	add_child(caption)
 	_prompt = Label.new()
-	_prompt.add_theme_font_size_override(&"font_size", 7)
+	GameFont.apply(_prompt)
+	_prompt.add_theme_font_size_override(&"font_size", 8)
 	_prompt.add_theme_color_override(&"font_color", Color("80d8ff"))
-	_prompt.position = Vector2(-38, -26)
+	_prompt.position = Vector2(-52, -30)
 	_prompt.visible = false
 	add_child(_prompt)

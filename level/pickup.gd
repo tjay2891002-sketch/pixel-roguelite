@@ -12,6 +12,7 @@ extends Area2D
 const SFX := preload("res://fx/sfx_builder.gd")
 const Drops := preload("res://level/drops.gd")
 const PotionTex := preload("res://assets/ui/icon_potion.png")
+const GameFont := preload("res://fx/game_font.gd")
 
 ## Where the swap-dropped old weapon lands: far enough that the collecting
 ## player (body 5 + pickup 5 wide) isn't touching it — no re-pickup loop.
@@ -112,19 +113,20 @@ func _build_visual() -> void:
 			add_child(_diamond(Color("e8eef2"), 7.0))
 			var label := Label.new()
 			label.text = (payload as WeaponData).display_name
-			label.add_theme_font_size_override(&"font_size", 6)
+			GameFont.apply(label)
+			label.add_theme_font_size_override(&"font_size", 7)
 			label.add_theme_color_override(&"font_color", Color("e8eef2"))
 			label.position = Vector2(-16, -22)
 			add_child(label)
 			_make_prompt("[F]")
 		&"potion":
 			add_child(_bottle(Color.WHITE)) # untinted = heal
-			_make_prompt("[F] Heal")
+			_make_prompt("[F] 治疗")
 		&"rage", &"swift", &"curse":
 			# buff potions: the flask tinted per effect
 			add_child(_bottle(_buff_color()))
 			if kind != &"curse":
-				_make_prompt("[F] " + ("RAGE" if kind == &"rage" else "SWIFT"))
+				_make_prompt("[F] " + ("狂暴" if kind == &"rage" else "疾速"))
 		&"shards":
 			# light-crystal diamond — reads "special currency", not a buff
 			add_child(_diamond(Color("80d8ff"), 4.5))
@@ -133,7 +135,8 @@ func _build_visual() -> void:
 func _make_prompt(text: String) -> void:
 	_prompt = Label.new()
 	_prompt.text = text
-	_prompt.add_theme_font_size_override(&"font_size", 7)
+	GameFont.apply(_prompt)
+	_prompt.add_theme_font_size_override(&"font_size", 8)
 	_prompt.add_theme_color_override(&"font_color", Color("ffd54a"))
 	_prompt.position = Vector2(-10, -34)
 	_prompt.visible = false

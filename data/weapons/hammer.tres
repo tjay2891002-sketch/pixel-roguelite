@@ -18,5 +18,5 @@ roll_cancel_start = 0.30
 [resource]
 script = ExtResource("1")
 id = &"hammer"
-display_name = "War Hammer"
+display_name = "战锤"
 steps = Array[Resource]([SubResource("AttackStep_1")])

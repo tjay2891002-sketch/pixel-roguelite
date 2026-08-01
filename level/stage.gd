@@ -13,6 +13,7 @@ const BossScene := preload("res://actors/enemies/boss.tscn")
 const EnchantPool := preload("res://level/enchant_pool.gd")
 const BossDoor := preload("res://level/boss_door.gd")
 const CoinTex := preload("res://assets/ui/coin.png")
+const GameFont := preload("res://fx/game_font.gd")
 ## Boss rotation: cycled by stage_index so every stage's fight differs.
 const BOSS_SCENES := [
 	preload("res://actors/enemies/boss.tscn"),          # Gatekeeper (melee + volleys)
@@ -85,6 +86,9 @@ var _boss = null # the boss whose bar is showing (freed after the kill)
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS # keep input alive while paused
+	# these labels render Chinese weapon names / lists
+	GameFont.apply(_info_label)
+	GameFont.apply(_pause_text)
 	RunManager.start_run()
 	EventBus.enemy_killed.connect(_on_enemy_killed)
 	EventBus.player_died.connect(_on_player_died)
@@ -512,7 +516,8 @@ func _update_status_row() -> void:
 		var b: Dictionary = player.BUFFS[id]
 		var chip := Label.new()
 		chip.text = "%s %d" % [b[&"tag"], ceili(buffs[id])]
-		chip.add_theme_font_size_override(&"font_size", 7)
+		GameFont.apply(chip) # tags are Chinese
+		chip.add_theme_font_size_override(&"font_size", 8)
 		chip.add_theme_color_override(&"font_color", b[&"color"])
 		_status_row.add_child(chip)
 

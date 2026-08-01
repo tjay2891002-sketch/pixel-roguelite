@@ -7,6 +7,7 @@ extends Area2D
 
 const ArchTex := preload("res://assets/ui/ornate_arch.png")
 const SFX := preload("res://fx/sfx_builder.gd")
+const GameFont := preload("res://fx/game_font.gd")
 
 var room: Dictionary = {}
 var _stage: Node = null
@@ -41,9 +42,10 @@ func _ready() -> void:
 	add_child(arch)
 
 	_prompt = Label.new()
-	_prompt.add_theme_font_size_override(&"font_size", 7)
+	GameFont.apply(_prompt)
+	_prompt.add_theme_font_size_override(&"font_size", 8)
 	_prompt.add_theme_color_override(&"font_color", Color("ffd54a"))
-	_prompt.position = Vector2(-18, -52)
+	_prompt.position = Vector2(-26, -52)
 	_prompt.visible = false
 	add_child(_prompt)
 
@@ -53,7 +55,7 @@ func _ready() -> void:
 
 func _process(_delta: float) -> void:
 	if _in_range:
-		_prompt.text = "[F] Enter" if room.get("cleared", false) else "Sealed"
+		_prompt.text = "[F] 进入下一层" if room.get("cleared", false) else "封印中"
 
 
 func _on_proximity(body: Node2D, entered: bool) -> void:

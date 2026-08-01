@@ -30,5 +30,5 @@ roll_cancel_start = 0.28
 [resource]
 script = ExtResource("1")
 id = &"axe"
-display_name = "Heavy Axe"
+display_name = "重斧"
 steps = Array[Resource]([SubResource("AttackStep_1"), SubResource("AttackStep_2")])

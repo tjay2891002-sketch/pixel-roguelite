@@ -42,5 +42,5 @@ roll_cancel_start = 0.22
 [resource]
 script = ExtResource("1")
 id = &"sword"
-display_name = "Balanced Sword"
+display_name = "平衡之剑"
 steps = Array[Resource]([SubResource("AttackStep_1"), SubResource("AttackStep_2"), SubResource("AttackStep_3")])
