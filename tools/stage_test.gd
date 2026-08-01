@@ -143,7 +143,7 @@ func _physics_process(_delta: float) -> bool:
 
 func _check_prop_scatter() -> void:
 	var lamps := 0
-	var floaters := 0
+	var bad_ground := 0
 	for child in _stage.get_children():
 		var feet = null
 		var tex = null
@@ -160,13 +160,22 @@ func _check_prop_scatter() -> void:
 		for room in _stage._rooms:
 			if room.bounds.has_point(feet):
 				var lines: PackedStringArray = room.chunk.map.split("\n", false)
-				var row: String = lines[lines.size() - 1]
 				var cx := int(floorf((feet.x - room.bounds.position.x) / 16.0))
-				if cx < 0 or cx >= row.length() or row[cx] != "#":
-					floaters += 1
+				# walkable surface: first # from the bottom with open space above
+				var surface := -1
+				for y in range(lines.size() - 1, 0, -1):
+					if cx < lines[y].length() and lines[y][cx] == "#" and lines[y - 1][cx] != "#":
+						surface = y
+						break
+				if surface < 0:
+					bad_ground += 1 # in a pit column
+				else:
+					var expect_y: float = room.bounds.position.y + surface * 16.0
+					if absf(feet.y - expect_y) > 1.0:
+						bad_ground += 1 # buried in a plane or floating
 				break
 	_check(lamps <= 2, "lamps capped per stage", "lamps=%d" % lamps)
-	_check(floaters == 0, "every prop has solid floor beneath", "floaters=%d" % floaters)
+	_check(bad_ground == 0, "every prop sits exactly on a walkable surface", "bad=%d" % bad_ground)
 
 
 func _blockers_enabled() -> bool:

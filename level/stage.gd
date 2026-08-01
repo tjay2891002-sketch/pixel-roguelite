@@ -295,6 +295,16 @@ func _setup_room(pl: Dictionary, path_index: int) -> void:
 	_scatter_props(room, pl)
 
 
+## Walkable surface at map column x: the first # FROM THE BOTTOM whose cell
+## above is open. Bottom-row arithmetic alone buries props on raised planes
+## (combat_f's trench floor sits one row above the last row).
+func _floor_row_at(lines: PackedStringArray, x: int) -> int:
+	for y in range(lines.size() - 1, 0, -1):
+		if x < lines[y].length() and lines[y][x] == "#" and lines[y - 1][x] != "#":
+			return y
+	return -1
+
+
 ## Room props: 2-3 per room at deterministic random floor spots, anchored to
 ## the floor. Breakables become DestructibleProps (solid to the player, blast
 ## enemies when smashed); decor stays visual-only at z=-1 — same layer as the
@@ -303,7 +313,6 @@ func _setup_room(pl: Dictionary, path_index: int) -> void:
 ## interaction range) and spots WITHOUT a solid floor cell below (a bottom-
 ## door pit would leave the prop floating).
 func _scatter_props(room: Dictionary, pl: Dictionary) -> void:
-	var floor_top: float = pl.pos.y + (pl.chunk.cell_size().y - 1) * TILE
 	var w: float = pl.chunk.bounds().size.x
 	var count := 2 + _rng.randi() % 2
 	var margin := 24.0
@@ -313,7 +322,6 @@ func _scatter_props(room: Dictionary, pl: Dictionary) -> void:
 	for m in pl.chunk.spawn_points(&"S"):
 		avoid.append(m.global_position.x) # don't park a crate on the spring
 	var lines: PackedStringArray = pl.chunk.map.split("\n", false)
-	var floor_row := lines.size() - 1
 	for i in count:
 		var tex: Texture2D = _roll_prop_tex(room.role)
 		var span := maxf(0.0, w - margin * 2.0)
@@ -325,20 +333,24 @@ func _scatter_props(room: Dictionary, pl: Dictionary) -> void:
 				break
 		if blocked:
 			continue
-		# ground check: the floor cell under px must be solid map rock
+		# ground on the LOCAL walkable surface (raised plane, trench rim…)
 		var cell_x := int(floorf((px - pl.pos.x) / TILE))
-		if cell_x < 0 or cell_x >= lines[floor_row].length() or lines[floor_row][cell_x] != "#":
+		if cell_x < 0:
 			continue
+		var row := _floor_row_at(lines, cell_x)
+		if row < 0:
+			continue # no standable ground in this column (a pit) — skip
+		var floor_y: float = pl.pos.y + row * TILE
 		if BREAKABLE_PROPS.has(tex):
 			var prop := DestructibleProp.new(tex)
 			add_child(prop)
-			prop.position = Vector2(px, floor_top) # origin at the feet
+			prop.position = Vector2(px, floor_y) # origin at the feet
 		else:
 			var sprite := Sprite2D.new()
 			sprite.texture = tex
 			sprite.z_index = -1
 			add_child(sprite)
-			sprite.position = Vector2(px, floor_top - tex.get_height() / 2.0)
+			sprite.position = Vector2(px, floor_y - tex.get_height() / 2.0)
 
 
 ## Mushroom springs at S markers — but only sometimes (a marker is a CHANCE,
