@@ -14,6 +14,7 @@ const EnchantPool := preload("res://level/enchant_pool.gd")
 const BossDoor := preload("res://level/boss_door.gd")
 const CoinTex := preload("res://assets/ui/coin.png")
 const GameFont := preload("res://fx/game_font.gd")
+const TileBuilder := preload("res://level/tileset_builder.gd")
 ## Boss rotation: cycled by stage_index so every stage's fight differs.
 const BOSS_SCENES := [
 	preload("res://actors/enemies/boss.tscn"),          # Gatekeeper (melee + volleys)
@@ -184,6 +185,7 @@ func _build_stage() -> void:
 		push_error("[Stage] generation failed; nothing to build")
 		return
 	Generator.instantiate(layout, $Chunks)
+	_build_fill_backdrop(layout)
 	_rooms.clear()
 	for i in layout.size():
 		_setup_room(layout[i], i)
@@ -191,6 +193,36 @@ func _build_stage() -> void:
 	# camera starts on the start room
 	if not _rooms.is_empty():
 		_apply_camera_bounds(_rooms[0].bounds)
+
+
+## Fill backdrop: paint solid rock over the whole stage bounds, carving out
+## every chunk's open cells — walls stop being hollow frames and rooms read
+## as one continuous mass. Sits behind the chunk tiles (z -2); the tileset's
+## collision comes free, so the mass is actually solid.
+func _build_fill_backdrop(layout: Array) -> void:
+	var min_cell := Vector2i(1 << 30, 1 << 30)
+	var max_cell := Vector2i(-(1 << 30), -(1 << 30))
+	var open := {} # global cell coords of every non-# map cell
+	for pl in layout:
+		var origin := Vector2i((pl.pos / TILE).floor()) # tile-aligned; floor() for negatives
+		var size: Vector2i = pl.chunk.cell_size()
+		min_cell = min_cell.min(origin)
+		max_cell = max_cell.max(origin + size)
+		var lines: PackedStringArray = pl.chunk.map.split("\n", false)
+		for y in lines.size():
+			for x in lines[y].length():
+				if lines[y][x] != "#":
+					open[origin + Vector2i(x, y)] = true
+	var layer := TileMapLayer.new()
+	layer.name = "FillBackdrop"
+	layer.tile_set = TileBuilder.build()
+	layer.z_index = -2
+	$Chunks.add_child(layer)
+	var pad := 6
+	for cy in range(min_cell.y - pad, max_cell.y + pad):
+		for cx in range(min_cell.x - pad, max_cell.x + pad):
+			if not open.has(Vector2i(cx, cy)):
+				layer.set_cell(Vector2i(cx, cy), TileBuilder.FILL, Vector2i(0, 0))
 
 
 # --- room setup --------------------------------------------------------------
