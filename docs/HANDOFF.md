@@ -16,7 +16,7 @@ A 2D pixel-art roguelite action-platformer (Dead Cells-like) in **Godot 4.7.1 / 
 
 ## Status — everything below is DONE
 
-- **M1** movement FSM (coyote/buffer/jump-cut/dash/wall/ledge), **M2** combat + juice (hitstop/shake/i-frames/poise), **M3** procgen (ASCII-map room chunks + critical-path generator, camera bounds, door locks, boss-door stage advance), **M4** 4 enemy archetypes, **M5** run loop + economy + HUD + death screen.
+- **M1** movement FSM (coyote/buffer/jump-cut/dash/wall/ledge), **M2** combat + juice (hitstop/shake/i-frames/poise), **M3** procgen (ASCII-map room chunks + critical-path generator, camera bounds, door locks, boss-door stage advance), **M4** 4 enemy archetypes, **M5** run loop + economy + HUD + death screen. Rooms enlarged 2026-08 (boss arena 22x11, combat 22-26 wide); enemies fenced to the walkable span (never into door planes/blockers).
 - **Art (all real)**: player fighter, rat, spitter+Ball, heavy, eagle, GothicVania tiles+parallax bg, Gothic HUD, Gothic pause menu, shop stands, room props.
 - **Audio**: village BGM (Music bus), combat hit=`Sword Impact`, swing=`sfx_swing_1/2/3.ogg` — one whoosh per combo step (split from freesound "Whoosh Triple", peaks normalized, attack.gd adds a pitch ladder 1.0/1.06/0.94 so the finisher reads heavier), other SFX procedural in `fx/sfx_builder.gd`.
 - **Props**: crates/barrels destructible (solid to player, roll-through smashes, 12 dmg blast vs enemies); sign/street-lamp decor z=-1 behind actors (was blocking the view).
@@ -81,6 +81,7 @@ A 2D pixel-art roguelite action-platformer (Dead Cells-like) in **Godot 4.7.1 / 
 - Never `add_child` a collision-bearing node inside a physics signal (body_entered, hitbox dispatch): shape creation/monitoring mid-flush errors ("Can't change this state while flushing queries"). `call_deferred` the spawn (see destructible_prop's drop roll + pickup's swap-drop).
 - Autoload `_ready` (e.g. SaveStub.load_data) runs AFTER a `--script` main loop's `_initialize` — mutate autoload state from frame 1+, never in `_initialize`.
 - `SaveStub.flush()` AND `load_data()` are headless no-ops: tests never touch the real user://save.json, and a late `load_data` replacing `data` mid-test can't wipe test state (stage_test treasure flake).
+- Enemy room confinement margin is 28px (`enemy.ROOM_MARGIN`): wall tile (16) + lock-blocker intrusion (24) — the old 8px clamp put enemies INSIDE the red blocker. patrol/chase steer inside it; the clamp is the backstop.
 - `obj.get("x") or default` is a BOOL op in GDScript (`40 or 0` → `true` → `int(true)` = 1 — the boss paid 1 xp instead of 40). Use `v if v != null else default`.
 - Children are ready BEFORE the parent: a child component can't read the parent's `@onready` vars in its own `_ready` — `get_node()` directly (boss_brain reads Health this way).
 - The boss bar hides on ANY boss-room unlock, not just on clear — stepping out mid-fight unlocks-without-clearing, and a clear-only hide left the bar stuck on into the next stage (user report).

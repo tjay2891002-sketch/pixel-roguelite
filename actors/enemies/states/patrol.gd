@@ -12,8 +12,14 @@ func physics_update(delta: float) -> void:
 	if actor.target != null:
 		resume_pursuit()
 		return
-	if actor.global_position.x > actor.home_x + actor.patrol_range:
+	# fence the patrol to the room's walkable span (never into door planes)
+	var lo = actor.home_x - actor.patrol_range
+	var hi = actor.home_x + actor.patrol_range
+	if actor.room_bounds.has_area():
+		lo = maxf(lo, actor.room_bounds.position.x + actor.ROOM_MARGIN)
+		hi = minf(hi, actor.room_bounds.end.x - actor.ROOM_MARGIN)
+	if actor.global_position.x > hi:
 		_dir = -1.0
-	elif actor.global_position.x < actor.home_x - actor.patrol_range:
+	elif actor.global_position.x < lo:
 		_dir = 1.0
 	actor.walk(_dir, delta)

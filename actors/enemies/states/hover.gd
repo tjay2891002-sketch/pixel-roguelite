@@ -27,7 +27,7 @@ func physics_update(delta: float) -> void:
 	var offset := Vector2(-actor.facing * 34.0, -34.0 + sin(_t * 2.5) * 6.0)
 	var target_pos: Vector2 = actor.target.global_position + offset
 	if actor.room_bounds.has_area():
-		var inner = actor.room_bounds.grow(-14.0)
+		var inner = actor.room_bounds.grow(-actor.ROOM_MARGIN)
 		target_pos = target_pos.clamp(inner.position, inner.end - Vector2(1, 1))
 	var to: Vector2 = target_pos - actor.global_position
 	var desired = Vector2.ZERO if to.length() < 6.0 else to.normalized() * actor.move_speed

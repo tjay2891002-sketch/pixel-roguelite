@@ -15,6 +15,9 @@ var _player
 var _spitter
 var _flyer
 var _heavy
+var _rat
+var _rat_min_x := 9999.0
+var _rat_max_x := -9999.0
 var _projectile
 var _saw_hover := false
 var _saw_flyer_telegraph := false
@@ -53,6 +56,9 @@ func _physics_process(_delta: float) -> bool:
 	# track projectile + flyer states
 	if _projectile == null:
 		_projectile = _find_projectile()
+	if _rat != null and is_instance_valid(_rat):
+		_rat_min_x = minf(_rat_min_x, _rat.global_position.x)
+		_rat_max_x = maxf(_rat_max_x, _rat.global_position.x)
 	if _flyer != null:
 		var fs: StringName = _flyer.state_machine.current.name
 		if fs == &"Hover": _saw_hover = true
@@ -99,6 +105,11 @@ func _physics_process(_delta: float) -> bool:
 			_heavy = load("res://actors/enemies/heavy.tscn").instantiate()
 			root.get_node("Arena").add_child(_heavy)
 			_heavy.global_position = Vector2(200, 139)
+			# confinement check: a rat fenced to x in [328, 432]
+			_rat = load("res://actors/enemies/rat_rusher.tscn").instantiate()
+			root.get_node("Arena").add_child(_rat)
+			_rat.global_position = Vector2(360, 139)
+			_rat.room_bounds = Rect2(300, 100, 160, 100)
 		205:
 			_hit_heavy(8, 8.0)
 		206:
@@ -112,6 +123,13 @@ func _physics_process(_delta: float) -> bool:
 			_check(_heavy.health.hp == 31, "heavy takes chain damage (60->31)", "hp=%d" % _heavy.health.hp)
 			_check(_heavy.state_machine.current.name != &"Stagger",
 				"one chain does NOT stagger the heavy (poise 80)", "state=%s" % _heavy.state_machine.current.name)
+			# shove the rat toward the fence: the clamp must hold
+			_rat.health.take_hit({&"damage": 1, &"poise_damage": 0.0,
+				&"knockback": Vector2(400, 0), &"attacker": _player})
+		242:
+			_check(_rat_max_x <= 433.0 and _rat_min_x >= 327.0,
+				"rat never leaves the walkable span (margin 28)", "min=%.1f max=%.1f" % [_rat_min_x, _rat_max_x])
+			_check(_rat_max_x - _rat_min_x > 30.0, "patrol still roams inside the fence", "span=%.1f" % (_rat_max_x - _rat_min_x))
 			_finish()
 	return false
 

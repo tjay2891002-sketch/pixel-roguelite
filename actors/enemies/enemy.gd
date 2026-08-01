@@ -38,6 +38,10 @@ var target: Node2D = null # detected player
 ## their room (patrol/chase/knockback all respect it). Empty = unconfined.
 var room_bounds := Rect2()
 
+## Confinement margin: wall tile (16) + lock-blocker intrusion (24). An
+## enemy clamped closer than this ends up INSIDE the red door blocker.
+const ROOM_MARGIN := 28.0
+
 ## state_machine is untyped on purpose (same convention as the player).
 var state_machine
 
@@ -99,8 +103,8 @@ func _physics_process(delta: float) -> void:
 		velocity.y = minf(velocity.y + gravity * delta, 320.0)
 	move_and_slide()
 	if room_bounds.has_area():
-		global_position.x = clampf(global_position.x, room_bounds.position.x + 8.0, room_bounds.end.x - 8.0)
-		global_position.y = clampf(global_position.y, room_bounds.position.y + 10.0, room_bounds.end.y - 10.0)
+		global_position.x = clampf(global_position.x, room_bounds.position.x + ROOM_MARGIN, room_bounds.end.x - ROOM_MARGIN)
+		global_position.y = clampf(global_position.y, room_bounds.position.y + 12.0, room_bounds.end.y - 10.0)
 
 
 func _process(_delta: float) -> void:
