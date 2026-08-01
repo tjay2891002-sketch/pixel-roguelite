@@ -3,6 +3,7 @@
 
 const RATE := 22050
 const HIT_SOUND := preload("res://assets/audio/sfx_hit.ogg")
+const KILL_SOUND := preload("res://assets/audio/sfx_kill.ogg")
 # one whoosh per combo step (split from freesound "Whoosh Triple")
 const SWING_SOUNDS := [
 	preload("res://assets/audio/sfx_swing_1.ogg"),
@@ -15,7 +16,7 @@ static var _cache := {}
 
 static func swing(step: int = 0) -> AudioStream: return SWING_SOUNDS[clampi(step, 0, SWING_SOUNDS.size() - 1)]
 static func hit() -> AudioStream: return HIT_SOUND
-static func kill() -> AudioStreamWAV: return _cached(&"kill", _noise(0.2, 0.8))
+static func kill() -> AudioStream: return KILL_SOUND
 static func roll() -> AudioStreamWAV: return _cached(&"roll", _noise(0.07, 0.35))
 static func pickup() -> AudioStreamWAV: return _cached(&"pickup", _tone(660.0, 990.0, 0.1, 0.5))
 static func jump() -> AudioStreamWAV: return _cached(&"jump", _tone(250.0, 450.0, 0.08, 0.4))

@@ -44,10 +44,10 @@ A 2D pixel-art roguelite action-platformer (Dead Cells-like) in **Godot 4.7.1 / 
 | ✅ | 附魔系统 | 魔晶（箱子/boss 奖励的特殊货币）在 boss 房附魔池给武器强化（+12%/级，上限5）；大门挪到 boss 房右墙 |
 | ✅ | P2 弹簧机关 | 蘑菇弹簧（S 标记进 ASCII 地图）：坠落踩上高弹（>双跳）+ 刷新空中跳；标记仅 60% 概率出现，落点按标记向下找实地（不再埋进平台阴影） |
 | ✅ | P2 biome 变体 | 洞穴 biome：换色瓦片集 + 史莱姆（Poo Goo 素材）替换老鼠 + 冷色调背景；奇偶层轮换城镇/洞穴，验证生成器通用性 |
+| ✅ | P3 meta 进度 UI | 死亡结算面板：带回细胞数 + 永久解锁列表（数字键 1-5 购买，SaveStub 持久化）；标题页有提示 |
+| ✅ | P3 高音质战斗音 | Kenney Impact Sounds (CC0)：打击=金属重击 002，击杀=金属重击 001；挥击保留三段拆分 |
 | ✅ | 连续性 | 记忆文件 + 本文档 |
 
-| 📋 P3 | meta 进度 UI | SaveStub 已埋点；永久解锁界面（Delve-bound 才有意义，先 fun） |
-| 📋 P3 | 更高音质战斗音 | freesound 原版 wav 需登录；当前用预览流 lq 版 |
 
 ## Architecture quick map
 

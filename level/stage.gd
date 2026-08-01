@@ -55,6 +55,7 @@ const KEY_Q := 81
 const KEY_S := 83
 const KEY_ESCAPE := 4194305
 const KEY_F3 := 4194334
+const KEY_1 := 49 # 1..5 = meta unlock hotkeys on the death screen
 
 ## Title shows once per app launch (survives scene reloads; skipped in
 ## headless tests where current_scene is null).
@@ -106,6 +107,8 @@ func _ready() -> void:
 	# these labels render Chinese weapon names / lists
 	GameFont.apply(_info_label)
 	GameFont.apply(_pause_text)
+	GameFont.apply(_death_text) # death screen hosts the meta unlock panel
+	GameFont.apply(_title_overlay.get_node("Text"))
 	RunManager.start_run()
 	EventBus.enemy_killed.connect(_on_enemy_killed)
 	EventBus.player_died.connect(_on_player_died)
@@ -164,6 +167,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		if key == KEY_R:
 			get_tree().paused = false
 			get_tree().reload_current_scene()
+		elif key >= KEY_1 and key < KEY_1 + Drops.WEAPON_POOL.size() - 1:
+			_try_meta_unlock(key - KEY_1)
 		return
 	if _pause_overlay.visible:
 		match key:
@@ -640,9 +645,46 @@ func _on_player_died() -> void:
 	# wall-clock beat (ignore_time_scale): the killing blow's hitstop would
 	# otherwise stretch this timer several-fold
 	await get_tree().create_timer(0.8, true, false, true).timeout
-	_death_text.text = "YOU DIED\n\ncells collected: %d\n\n[R] restart" % int(SaveStub.data.get("currency", 0))
+	_update_death_text()
 	_death_overlay.visible = true
 	get_tree().paused = true
+
+
+## Death screen = the meta seam (P3): banked cells survive death and buy
+## PERMANENT weapon unlocks. Hotkeys 1..N map to the pool minus the starter.
+func _update_death_text() -> void:
+	var cells := int(SaveStub.data.get("currency", 0))
+	var lines: Array[String] = ["你死了", "", "带回细胞: %d" % cells, "", "永久解锁（细胞不会因死亡丢失）:"]
+	for i in range(Drops.WEAPON_POOL.size()):
+		var entry: Dictionary = Drops.WEAPON_POOL[i]
+		var w: WeaponData = entry[&"data"]
+		if i == 0:
+			lines.append("  %s —— 初始武器 ✓" % w.display_name)
+		elif SaveStub.is_weapon_unlocked(w.id):
+			lines.append("  [%d] %s —— 已解锁 ✓" % [i, w.display_name])
+		elif cells >= int(entry[&"cost"]):
+			lines.append("  [%d] %s —— %d 细胞" % [i, w.display_name, int(entry[&"cost"])])
+		else:
+			lines.append("  [%d] %s —— %d 细胞（不足）" % [i, w.display_name, int(entry[&"cost"])])
+	lines.append("")
+	lines.append("[R] 重开")
+	_death_text.text = "\n".join(lines)
+
+
+func _try_meta_unlock(idx: int) -> void:
+	var entry: Dictionary = Drops.WEAPON_POOL[idx + 1]
+	var w: WeaponData = entry[&"data"]
+	if SaveStub.is_weapon_unlocked(w.id):
+		return
+	var cost := int(entry[&"cost"])
+	var cells := int(SaveStub.data.get("currency", 0))
+	if cells < cost:
+		AudioBus.play_sfx(SFX.deny(), player.global_position)
+		return
+	SaveStub.data["currency"] = cells - cost
+	SaveStub.unlock_weapon(w.id) # appends + flushes the save
+	AudioBus.play_sfx(SFX.unlock(), player.global_position)
+	_update_death_text()
 
 
 func _toggle_pause() -> void:

@@ -143,6 +143,7 @@ offset_right = 360.0
 theme_override_font_sizes/font_size = 12
 text = "PIXEL ROGUELITE
 A/D move · Space jump x2 · J attack · K roll
+死亡后可用细胞永久解锁武器
 — press any key —"
 horizontal_alignment = 1
 
@@ -156,9 +157,9 @@ color = Color(0.25, 0, 0, 0.75)
 
 [node name="DeathText" type="Label" parent="DeathOverlay"]
 offset_left = 120.0
-offset_top = 100.0
+offset_top = 52.0
 offset_right = 360.0
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 9
 text = "YOU DIED"
 horizontal_alignment = 1
 
