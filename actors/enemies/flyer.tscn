@@ -39,6 +39,7 @@ knockback_resist = 0.8
 xp_value = 8
 swoop_speed = 190.0
 attack_state = &"Swoop"
+persistent_target = true
 aim_mode = &"dash"
 sprite_set = "eagle"
 

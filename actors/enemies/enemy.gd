@@ -24,6 +24,9 @@ signal state_changed(state_name: StringName)
 @export var swoop_speed := 220.0       # flyer
 @export var swoop_time := 0.35         # flyer
 @export var swoop_cooldown := 1.2      # flyer: seconds between swoops
+## Hunters: once aggroed they never let go — kill or be killed. Keeps
+## disengage-prone flyers from ever entering the corner-wedging patrol.
+@export var persistent_target := false
 @export var xp_value := 5              # RunManager XP on kill (dummy: 0)
 @export var attack_state := &"Attack"  # state entered after Telegraph (spitter: RangedAttack, flyer: Swoop)
 @export var aim_mode := &""            # telegraph warning: "shot" (aim line) | "dash" (path preview) | "" (none)
@@ -226,6 +229,8 @@ func _on_detection_entered(body: Node2D) -> void:
 
 
 func _on_detection_exited(_body: Node2D) -> void:
+	if persistent_target and target != null:
+		return # hunters never let go once aggroed
 	target = null
 
 
