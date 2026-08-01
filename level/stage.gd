@@ -336,13 +336,25 @@ func _scatter_props(room: Dictionary, pl: Dictionary) -> void:
 			sprite.position = Vector2(px, floor_top - tex.get_height() / 2.0)
 
 
-## Mushroom springs at S markers, feet on the floor line.
+## Mushroom springs at S markers — but only sometimes (a marker is a CHANCE,
+## not a guarantee), and each spring grounds on the first solid cell BELOW
+## its marker, never blindly at the room's bottom row (a marker under a
+## platform used to bury the spring in the overhang's shadow).
+const SPRING_CHANCE := 0.6
+
 func _make_springs(pl: Dictionary) -> void:
-	var floor_top: float = pl.pos.y + (pl.chunk.cell_size().y - 1) * TILE
+	var lines: PackedStringArray = pl.chunk.map.split("\n", false)
 	for marker in pl.chunk.spawn_points(&"S"):
+		if _rng.randf() > SPRING_CHANCE:
+			continue
+		var cell := Vector2i((marker.position / TILE).floor()) # chunk-local
+		var floor_row := cell.y + 1
+		while floor_row < lines.size() - 1 and lines[floor_row][cell.x] != "#":
+			floor_row += 1
 		var spring: Area2D = Spring.new()
 		add_child(spring)
-		spring.global_position = Vector2(marker.global_position.x, floor_top)
+		spring.global_position = Vector2(
+			marker.global_position.x, pl.pos.y + floor_row * TILE)
 
 
 ## Weighted prop pick. The street lamp is rare and only allowed in big

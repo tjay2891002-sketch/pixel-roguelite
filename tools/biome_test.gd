@@ -24,11 +24,15 @@ func _physics_process(_delta: float) -> bool:
 	_frame += 1
 	if _frame == 4:
 		_check(_stage._config.id == &"cave", "stage 2 uses the cave biome", "id=%s" % _stage._config.id)
-		var slug_found := false
-		for node in get_nodes_in_group(&"enemy"):
-			if node.get("sprite_set") == &"slug":
-				slug_found = true
-		_check(slug_found, "enemy override spawns slugs in the cave", "")
+		# deterministic override check: an E spawn in the cave must BE a slug
+		# (asserting "a slug exists in the layout" flakes — E-marker picks
+		# are budgeted rng and may all roll non-E letters on some seeds)
+		var before := get_nodes_in_group(&"enemy").size()
+		_stage._spawn_enemy(_stage._rooms[0], &"E", Vector2(64, 64))
+		var enemies := get_nodes_in_group(&"enemy")
+		_check(enemies.size() == before + 1 and enemies[enemies.size() - 1].get("sprite_set") == &"slug",
+			"enemy override: cave E-marker spawns a slug", "")
+		enemies[enemies.size() - 1].queue_free()
 		var boss_found := false
 		for room in _stage._rooms:
 			if room.role == 4:

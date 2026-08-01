@@ -15,6 +15,7 @@ var _sprite: AnimatedSprite2D
 
 
 func _ready() -> void:
+	add_to_group(&"spring")
 	collision_layer = 0
 	collision_mask = 2 # player_body
 	monitorable = false
