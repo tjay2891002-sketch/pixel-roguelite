@@ -1,5 +1,5 @@
 # Godot 4 import cache — regenerated on first open, never commit
 .godot/
 export.cfg
-export_presets.cfg
+dist/
 *.translation
