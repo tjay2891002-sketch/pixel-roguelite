@@ -471,12 +471,20 @@ func _on_enemy_killed(enemy: Node2D) -> void:
 				for flag in room.boss_flags:
 					flag.color = Color("ffd54a")
 				if room.role == 4:
-					# boss kill fanfare + reward burst at the corpse + the
-					# enchant pool surfaces (spend shards on the held weapon)
+					# boss kill fanfare + reward burst + the enchant pool.
+					# Layout is computed FROM THE ROOM: pool left-of-center,
+					# reward line right of it, door zone at the right wall
+					# stays clear — overlapping interactables fight over F.
 					AudioBus.play_sfx(SFX.levelup(), player.global_position)
-					Drops.spawn_boss_reward(self, enemy.global_position)
+					var floor_y: float = room.bounds.end.y - 16.0
+					var pool_x: float = room.bounds.get_center().x - 24.0
+					# Variant dict values: plain = (no := inference here)
+					var lo = room.bounds.position.x + 36.0
+					var hi = room.bounds.end.x - 140.0
+					pool_x = clampf(pool_x, lo, maxf(hi, lo)) # degenerate room: pin left
+					Drops.spawn_boss_reward(self, Vector2(pool_x + 44.0, floor_y))
 					# deferred: enemy_killed fires inside the physics flush
-					_spawn_enchant_pool.call_deferred(room)
+					_spawn_enchant_pool.call_deferred(room, pool_x)
 			return
 
 
@@ -487,12 +495,13 @@ func _on_boss_door_entered(_body: Node2D, room: Dictionary) -> void:
 	_regenerate.call_deferred()
 
 
-## Boss-clear reward: the enchant pool surfaces at the room's center floor.
+## Boss-clear reward: the enchant pool surfaces left-of-center on the floor
+## line (reward burst goes right of it — see the kill handler's layout).
 ## Deferred out of the kill signal (physics flush — it builds shapes).
-func _spawn_enchant_pool(room: Dictionary) -> void:
+func _spawn_enchant_pool(room: Dictionary, px: float) -> void:
 	var pool: Area2D = EnchantPool.new()
 	add_child(pool)
-	pool.global_position = Vector2(room.bounds.get_center().x, room.bounds.end.y - 16.0)
+	pool.global_position = Vector2(px, room.bounds.end.y - 16.0)
 
 
 func _on_leveled_up(_lvl: int) -> void:

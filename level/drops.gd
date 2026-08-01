@@ -101,10 +101,11 @@ static func _rng_float(parent: Node) -> float:
 	return randf()
 
 
-## Boss kill reward: a weapon (unlocked pool), a potion, and a shard burst,
-## deferred (the kill signal fires inside the physics flush).
+## Boss kill reward line: weapon, potion, two shard piles — spaced 20px
+## starting at pos (the stage picks a FLOOR spot clear of the pool/door);
+## spawns are deferred (the kill signal fires inside the physics flush).
 static func spawn_boss_reward(parent: Node, pos: Vector2) -> void:
-	spawn.call_deferred(parent, &"weapon", pos + Vector2(-24.0, -8.0))
-	spawn.call_deferred(parent, &"potion", pos + Vector2(0.0, -8.0))
-	spawn.call_deferred(parent, &"shards", pos + Vector2(18.0, -6.0), 10)
-	spawn.call_deferred(parent, &"shards", pos + Vector2(30.0, -10.0), 10)
+	spawn.call_deferred(parent, &"weapon", pos)
+	spawn.call_deferred(parent, &"potion", pos + Vector2(20.0, 0.0))
+	spawn.call_deferred(parent, &"shards", pos + Vector2(40.0, 0.0), 10)
+	spawn.call_deferred(parent, &"shards", pos + Vector2(56.0, 0.0), 10)

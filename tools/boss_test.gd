@@ -120,6 +120,17 @@ func _physics_process(_delta: float) -> bool:
 		42:
 			_pool = get_first_node_in_group(&"enchant_pool")
 			_check(_pool != null, "enchant pool surfaces after the clear", "")
+			# rewards must not fight the pool for the F key: all clear of it,
+			# and all floor-snapped (they used to spawn at corpse height)
+			var floor_y: float = _boss_room.bounds.end.y - 16.0
+			var min_gap := 999.0
+			var max_float := 0.0
+			for child in _stage.get_children():
+				if child is Area2D and child.get("kind") != null:
+					min_gap = minf(min_gap, absf(child.global_position.x - _pool.global_position.x))
+					max_float = maxf(max_float, absf(child.global_position.y - floor_y))
+			_check(min_gap > 36.0, "reward pickups stay clear of the enchant pool", "gap=%.1f" % min_gap)
+			_check(max_float < 2.0, "rewards sit on the floor (not mid-air)", "float=%.1f" % max_float)
 			_player.global_position = _pool.global_position
 		44:
 			# set the shard count only AFTER the teleport: shard piles from the
