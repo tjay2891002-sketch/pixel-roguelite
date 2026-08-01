@@ -81,6 +81,12 @@ func _ready() -> void:
 	if visual is AnimatedSprite2D:
 		visual.sprite_frames = _build_sprite_set()
 		state_changed.connect(_on_state_sprite_anim)
+	# facing data starts at -1 but flip_h defaults false: sync the art at
+	# birth (a never-walking mob would otherwise stay back-facing forever)
+	if visual is AnimatedSprite2D:
+		visual.flip_h = (facing == -1)
+	elif visual:
+		visual.scale.x = facing
 	aim_line = Line2D.new()
 	aim_line.name = "AimLine"
 	aim_line.width = 1.0
@@ -198,6 +204,7 @@ func hide_aim_line() -> void:
 
 func _on_detection_entered(body: Node2D) -> void:
 	target = body
+	face_target() # turn to the player the instant they're spotted
 
 
 func _on_detection_exited(_body: Node2D) -> void:
