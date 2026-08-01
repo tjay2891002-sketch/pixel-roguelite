@@ -60,6 +60,8 @@ const EAGLE_ANIMS = preload("res://actors/enemies/eagle_anims.gd")
 const REDCAP_ANIMS = preload("res://actors/enemies/redcap_anims.gd")
 const WITCH_ANIMS = preload("res://actors/enemies/witch_anims.gd")
 const SLUG_ANIMS = preload("res://actors/enemies/slug_anims.gd")
+const DRONE_ANIMS = preload("res://actors/enemies/drone_anims.gd")
+const PIRANHA_ANIMS = preload("res://actors/enemies/piranha_anims.gd")
 
 @export var sprite_set := &"" # "rat" | "spitter" | "heavy" | "eagle" | "" (greybox)
 
@@ -149,6 +151,8 @@ func _build_sprite_set() -> SpriteFrames:
 		&"redcap": return REDCAP_ANIMS.build()
 		&"witch": return WITCH_ANIMS.build()
 		&"slug": return SLUG_ANIMS.build()
+		&"drone": return DRONE_ANIMS.build()
+		&"piranha": return PIRANHA_ANIMS.build()
 	return null
 
 

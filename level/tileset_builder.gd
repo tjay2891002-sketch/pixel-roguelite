@@ -19,6 +19,11 @@ const TEXTURES := {
 		preload("res://assets/level/tiles/tile_fill_cave.png"),
 		preload("res://assets/level/tiles/tile_wall_cave.png"),
 	],
+	&"sewer": [
+		preload("res://assets/level/tiles/tile_surface_sewer.png"),
+		preload("res://assets/level/tiles/tile_fill_sewer.png"),
+		preload("res://assets/level/tiles/tile_wall_sewer.png"),
+	],
 }
 
 static var _tilesets := {}

@@ -1,0 +1,128 @@
+[gd_scene load_steps=21 format=3]
+
+[ext_resource type="Script" path="res://actors/enemies/enemy.gd" id="1"]
+[ext_resource type="Script" path="res://actors/player/state_machine/state_machine.gd" id="2"]
+[ext_resource type="Script" path="res://actors/enemies/states/idle.gd" id="3"]
+[ext_resource type="Script" path="res://actors/enemies/states/patrol.gd" id="4"]
+[ext_resource type="Script" path="res://actors/enemies/states/hover.gd" id="5"]
+[ext_resource type="Script" path="res://actors/enemies/states/telegraph.gd" id="6"]
+[ext_resource type="Script" path="res://actors/enemies/states/swoop.gd" id="7"]
+[ext_resource type="Script" path="res://actors/enemies/states/stagger.gd" id="8"]
+[ext_resource type="Script" path="res://actors/enemies/states/dead.gd" id="9"]
+[ext_resource type="Script" path="res://combat/health.gd" id="10"]
+[ext_resource type="Script" path="res://combat/hitbox.gd" id="11"]
+[ext_resource type="Script" path="res://combat/hurtbox.gd" id="12"]
+[ext_resource type="Script" path="res://actors/enemies/states/ranged_attack.gd" id="13"]
+[ext_resource type="Script" path="res://actors/enemies/boss_brain.gd" id="14"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
+size = Vector2(16, 20)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hitbox"]
+size = Vector2(18, 14)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hurtbox"]
+size = Vector2(16, 20)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_detection"]
+radius = 80.0
+
+[node name="DroneBoss" type="CharacterBody2D"]
+collision_layer = 4
+collision_mask = 263
+floor_snap_length = 4.0
+script = ExtResource("1")
+move_speed = 40.0
+attack_range = 46.0
+telegraph_time = 0.5
+attack_recovery_time = 0.5
+swipe_damage = 9
+swipe_poise_damage = 10.0
+swipe_knockback = Vector2(120, -40)
+flying = true
+knockback_resist = 0.3
+swoop_speed = 230.0
+attack_state = &"Swoop"
+aim_mode = &"dash"
+projectile_speed = 90.0
+volley_count = 3
+xp_value = 40
+sprite_set = "drone"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_body")
+
+[node name="Sprite" type="AnimatedSprite2D" parent="."]
+scale = Vector2(1.4, 1.4)
+position = Vector2(0, -14)
+
+[node name="HpLabel" type="Label" parent="."]
+visible = false
+offset_left = -8.0
+offset_top = -40.0
+theme_override_font_sizes/font_size = 6
+text = "100"
+
+[node name="Hitbox" type="Area2D" parent="."]
+position = Vector2(13, 0)
+collision_layer = 16
+collision_mask = 32
+script = ExtResource("11")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hitbox"]
+shape = SubResource("RectangleShape2D_hitbox")
+
+[node name="Hurtbox" type="Area2D" parent="."]
+collision_layer = 64
+collision_mask = 520
+script = ExtResource("12")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+shape = SubResource("RectangleShape2D_hurtbox")
+
+[node name="Health" type="Node" parent="."]
+script = ExtResource("10")
+max_hp = 100
+max_poise = 70.0
+grace_time = 0.15
+
+[node name="DetectionZone" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionZone"]
+shape = SubResource("CircleShape2D_detection")
+
+[node name="StateMachine" type="Node" parent="."]
+script = ExtResource("2")
+
+[node name="Idle" type="Node" parent="StateMachine"]
+script = ExtResource("3")
+
+[node name="Patrol" type="Node" parent="StateMachine"]
+script = ExtResource("4")
+
+[node name="Hover" type="Node" parent="StateMachine"]
+script = ExtResource("5")
+
+[node name="Telegraph" type="Node" parent="StateMachine"]
+script = ExtResource("6")
+
+[node name="Swoop" type="Node" parent="StateMachine"]
+script = ExtResource("7")
+
+[node name="RangedAttack" type="Node" parent="StateMachine"]
+script = ExtResource("13")
+
+[node name="Stagger" type="Node" parent="StateMachine"]
+script = ExtResource("8")
+
+[node name="Dead" type="Node" parent="StateMachine"]
+script = ExtResource("9")
+
+[node name="Brain" type="Node" parent="."]
+script = ExtResource("14")
+bar_name = "HELIDRONE"
+enrage_speed_mult = 1.5
+enrage_telegraph_mult = 0.6
+melee_state = &"Swoop"

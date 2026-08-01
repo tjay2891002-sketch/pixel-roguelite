@@ -7,8 +7,9 @@ const PlayerScene := preload("res://actors/player/player.tscn")
 const Generator := preload("res://level/generator/stage_generator.gd")
 const GreyboxBiome := preload("res://data/biomes/greybox.tres")
 const CaveBiome := preload("res://data/biomes/cave.tres")
-## Biomes cycled by stage_index (town, cave, town, cave…).
-const BIOME_CONFIGS := [GreyboxBiome, CaveBiome]
+const SewerBiome := preload("res://data/biomes/sewer.tres")
+## Biomes cycled by stage_index (town, cave, sewer…).
+const BIOME_CONFIGS := [GreyboxBiome, CaveBiome, SewerBiome]
 const SFX := preload("res://fx/sfx_builder.gd")
 const ShopStand := preload("res://level/shop_stand.tscn")
 const Drops := preload("res://level/drops.gd")
@@ -24,6 +25,7 @@ const BOSS_SCENES := [
 	preload("res://actors/enemies/boss.tscn"),          # Gatekeeper (melee + volleys)
 	preload("res://actors/enemies/witch_boss.tscn"),    # Hexcaster (ranged volleys)
 	preload("res://actors/enemies/redcap_boss.tscn"),   # Street Stray (fast melee)
+	preload("res://actors/enemies/drone_boss.tscn"),    # Helidrone (flying swoops + volleys)
 ]
 const DestructibleProp := preload("res://level/destructible_prop.gd")
 const PROPS := [
@@ -141,11 +143,9 @@ func _process(_delta: float) -> void:
 		_coin_label.text = "x %d" % int(SaveStub.data.get("coins", 0))
 		_shard_label.text = "x %d" % int(SaveStub.data.get("shards", 0))
 		# attack power in parens next to the weapon: step-1 damage with the
-		# current mults (level + rage + enchant) folded in; +N = enchant rank
-		var atk := int(player.weapon.steps[0].damage * player.damage_mult * player.weapon_enchant_mult())
-		var rank: int = RunManager.enchant_rank(player.weapon.id)
-		var wname: String = player.weapon.display_name + ("+%d" % rank if rank > 0 else "")
-		_info_label.text = "stage: %d   %s (%d)" % [stage_index + 1, wname, atk]
+		# current mults (level + rage) folded in
+		var atk := int(player.weapon.steps[0].damage * player.damage_mult)
+		_info_label.text = "stage: %d   %s (%d)" % [stage_index + 1, player.weapon.display_name, atk]
 		_update_status_row()
 		if _boss_bar.visible and is_instance_valid(_boss):
 			# 200px bar, bottom-center of the 480x270 viewport
@@ -730,6 +730,10 @@ func _setup_background() -> void:
 		for layer in bg.get_children():
 			for sprite in layer.get_children():
 				sprite.modulate = Color(0.45, 0.6, 0.65)
+	elif biome.id == &"sewer":
+		for layer in bg.get_children():
+			for sprite in layer.get_children():
+				sprite.modulate = Color(0.5, 0.65, 0.5)
 
 
 func _make_bg_layer(tex: Texture2D, scale: float) -> ParallaxLayer:

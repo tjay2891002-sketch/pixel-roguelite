@@ -12,10 +12,13 @@ var biome_index: int = 0
 var level := 1
 var xp := 0
 
-## Weapon enchants (run-scoped): weapon id -> rank, bought with shards at
-## the boss-room enchant pool. +12% weapon damage per rank.
-const ENCHANT_MAX_RANK := 5
-var enchants := {}
+## Weapon enchants (run-scoped): three tracks bought with shards at the
+## boss-room enchant pool — atk_speed / lifesteal / move_speed, each max
+## rank 3. Cost scales with TOTAL ranks bought (10 + 8·total): every
+## purchase makes the next pricier, which is what makes the choice a build.
+const ENCHANT_MAX_RANK := 3
+const ENCHANT_TRACKS := [&"atk_speed", &"lifesteal", &"move_speed"]
+var enchants := {} # track -> rank
 
 var _rng := RandomNumberGenerator.new()
 
@@ -59,17 +62,25 @@ func roll_float() -> float:
 
 # --- weapon enchants ----------------------------------------------------------
 
-func enchant_rank(weapon_id: StringName) -> int:
-	return int(enchants.get(weapon_id, 0))
+func enchant_rank(track: StringName) -> int:
+	return int(enchants.get(track, 0))
 
 
-## Shard cost of the NEXT rank for this weapon (10/15/20/25/30).
-func enchant_cost(weapon_id: StringName) -> int:
-	return 10 + 5 * enchant_rank(weapon_id)
+func total_enchants() -> int:
+	var total := 0
+	for r in enchants.values():
+		total += int(r)
+	return total
 
 
-func add_enchant(weapon_id: StringName) -> void:
-	enchants[weapon_id] = mini(enchant_rank(weapon_id) + 1, ENCHANT_MAX_RANK)
+## Shard cost of the next rank of ANY track — shared escalation is the
+## build tradeoff.
+func enchant_cost() -> int:
+	return 10 + 8 * total_enchants()
+
+
+func add_enchant(track: StringName) -> void:
+	enchants[track] = mini(enchant_rank(track) + 1, ENCHANT_MAX_RANK)
 
 
 ## Deterministic RNG for a stage — any stage reproduces in isolation

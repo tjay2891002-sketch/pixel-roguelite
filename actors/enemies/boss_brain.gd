@@ -14,6 +14,8 @@ const SFX := preload("res://fx/sfx_builder.gd")
 @export var enrage_telegraph_mult := 0.65
 @export var enrage_volley_count := 0
 @export var enrage_alternate := true
+## What "melee" means for this boss: Attack for walkers, Swoop for flyers.
+@export var melee_state := &"Attack"
 
 var _boss # untyped, same convention as state.gd
 var _phase := 1
@@ -43,7 +45,8 @@ func _on_damaged(_info: Dictionary) -> void:
 
 
 func _on_state_changed(state_name: StringName) -> void:
-	# back on the hunt after a recovery -> arm the NEXT attack type
-	if _phase == 2 and enrage_alternate and enrage_volley_count == 0 and state_name == &"Chase":
+	# back on the hunt after a recovery (Chase for walkers, Hover for
+	# flyers) -> arm the NEXT attack type
+	if _phase == 2 and enrage_alternate and enrage_volley_count == 0 and state_name in [&"Chase", &"Hover"]:
 		_volley_next = not _volley_next
-		_boss.attack_state = &"RangedAttack" if _volley_next else &"Attack"
+		_boss.attack_state = &"RangedAttack" if _volley_next else melee_state

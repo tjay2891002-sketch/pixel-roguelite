@@ -35,17 +35,21 @@ func _physics_process(_delta: float) -> bool:
 				_boss = room.boss
 
 	match _frame:
-		# --- boss pool smoke: the other two bosses build and are wired
+		# --- boss pool smoke: the other three bosses build and are wired
 		2:
 			var witch = load("res://actors/enemies/witch_boss.tscn").instantiate()
 			var redcap = load("res://actors/enemies/redcap_boss.tscn").instantiate()
+			var drone = load("res://actors/enemies/drone_boss.tscn").instantiate()
 			_stage.add_child(witch)
 			_stage.add_child(redcap)
+			_stage.add_child(drone)
 			witch.global_position = Vector2(-600, -200)
 			redcap.global_position = Vector2(-700, -200)
+			drone.global_position = Vector2(-800, -200)
 		3:
 			var witch = _stage.get_node("WitchBoss")
 			var redcap = _stage.get_node("RedcapBoss")
+			var drone = _stage.get_node("DroneBoss")
 			_check(witch.get_node("Brain").bar_name == "HEXCASTER", "witch boss: bar name", "")
 			_check(witch.attack_state == &"RangedAttack" and witch.volley_count == 3,
 				"witch boss: ranged from phase 1, 3-ball", "")
@@ -54,8 +58,14 @@ func _physics_process(_delta: float) -> bool:
 			_check(redcap.get_node("Brain").bar_name == "STREET STRAY", "redcap boss: bar name", "")
 			_check(not redcap.get_node("Brain").enrage_alternate, "redcap enrage: pure melee", "")
 			_check(redcap.visual.sprite_frames != null, "redcap anims built", "")
+			_check(drone.get_node("Brain").bar_name == "HELIDRONE", "drone boss: bar name", "")
+			_check(drone.flying and drone.get_node("Brain").melee_state == &"Swoop",
+				"drone boss: flying, melee is the swoop", "")
+			_check(drone.volley_count == 3 and drone.visual.sprite_frames != null,
+				"drone boss: 3-ball volley, anims built", "")
 			witch.queue_free()
 			redcap.queue_free()
+			drone.queue_free()
 		# --- A: boss presence + sealed door + bar follows lock state
 		4:
 			_check(_boss_room != null, "found the boss room", "")
@@ -137,16 +147,22 @@ func _physics_process(_delta: float) -> bool:
 			# reward burst auto-collect on contact, the amount is seed-dependent
 			root.get_node("SaveStub").data["shards"] = 12
 		46:
-			_tap(&"interact")
-		49:
+			_key(49) # [1] 攻速, first rank costs 10
+		51:
 			var rm = root.get_node("RunManager")
-			_check(rm.enchant_rank(&"sword") == 1, "F enchants the sword to +1", "rank=%d" % rm.enchant_rank(&"sword"))
-			_check(int(root.get_node("SaveStub").data["shards"]) == 2, "enchant costs 10 (12->2)", "shards=%d" % int(root.get_node("SaveStub").data["shards"]))
-			_check(absf(_player.weapon_enchant_mult() - 1.12) < 0.001, "+1 = 12%% more weapon damage", "mult=%.3f" % _player.weapon_enchant_mult())
-		50:
-			_tap(&"interact") # rank 2 costs 15, we have 2 -> denied
-		54:
-			_check(root.get_node("RunManager").enchant_rank(&"sword") == 1, "broke: second enchant denied", "rank=%d" % root.get_node("RunManager").enchant_rank(&"sword"))
+			_check(rm.enchant_rank(&"atk_speed") == 1, "key 1 buys attack speed rank 1", "rank=%d" % rm.enchant_rank(&"atk_speed"))
+			_check(int(root.get_node("SaveStub").data["shards"]) == 2, "first enchant costs 10 (12->2)", "shards=%d" % int(root.get_node("SaveStub").data["shards"]))
+			_check(absf(_player.anim_player.speed_scale - 1.1) < 0.001, "attack speed +10%% on the AnimationPlayer", "scale=%.3f" % _player.anim_player.speed_scale)
+		52:
+			root.get_node("SaveStub").data["shards"] = 40
+			_key(50) # [2] 吸血, second enchant costs 18 (shared escalation)
+		57:
+			var rm2 = root.get_node("RunManager")
+			_check(rm2.enchant_rank(&"lifesteal") == 1, "key 2 buys lifesteal rank 1", "rank=%d" % rm2.enchant_rank(&"lifesteal"))
+			_check(int(root.get_node("SaveStub").data["shards"]) == 22, "second enchant costs 18 (40->22)", "shards=%d" % int(root.get_node("SaveStub").data["shards"]))
+			_key(49) # atk_speed rank 2 would cost 26 > 22 -> denied
+		62:
+			_check(root.get_node("RunManager").enchant_rank(&"atk_speed") == 1, "escalated price denies the third rank", "rank=%d" % root.get_node("RunManager").enchant_rank(&"atk_speed"))
 			# the door hugs the boss room's right wall
 			var door_x: float = _boss_room.boss_flags[0].get_parent().global_position.x
 			_check(door_x > _boss_room.bounds.get_center().x + _boss_room.bounds.size.x * 0.25,
@@ -154,10 +170,10 @@ func _physics_process(_delta: float) -> bool:
 			# standing AT the open door must NOT teleport by itself (the user
 			# got force-advanced while picking up the reward burst)
 			_player.global_position = _boss_room.boss_flags[0].get_parent().global_position
-		58:
+		66:
 			_check(_stage.stage_index == 0, "open door waits for F (no auto-advance)", "stage_index=%d" % _stage.stage_index)
 			_tap(&"interact")
-		65:
+		73:
 			_check(_stage.stage_index == 1, "F at the door advances the stage", "stage_index=%d" % _stage.stage_index)
 			_check(not _stage._boss_bar.visible, "bar stays hidden on the next stage", "")
 			_finish()
@@ -167,6 +183,13 @@ func _physics_process(_delta: float) -> bool:
 func _tap(action: StringName) -> void:
 	_press(action)
 	_release.call_deferred(action)
+
+
+func _key(keycode: int) -> void:
+	var event := InputEventKey.new()
+	event.physical_keycode = keycode
+	event.pressed = true
+	Input.parse_input_event(event)
 
 
 func _press(action: StringName) -> void:

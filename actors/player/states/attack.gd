@@ -29,7 +29,10 @@ func enter() -> void:
 	# Call Method track can be skipped on its first frame (the first swing
 	# of a chain then never opens its hitbox).
 	player.anim_player.advance(0.0)
-	_duration = player.anim_player.get_animation(_step.animation).length
+	# attack-speed enchant: the anim plays faster, so the state's clock must
+	# shrink with it or the swing would linger past its frames
+	_duration = player.anim_player.get_animation(_step.animation).length \
+		/ maxf(player.anim_player.speed_scale, 0.01)
 	if player.is_on_floor():
 		player.velocity.x = 0.0
 
@@ -99,7 +102,7 @@ func _configure_hitbox() -> void:
 	player.hitbox.position = Vector2(_step.hitbox_offset.x * player.facing, _step.hitbox_offset.y)
 	player.current_lunge = _step.lunge
 	player.current_hit_info = {
-		&"damage": int(_step.damage * player.damage_mult * player.weapon_enchant_mult()),
+		&"damage": int(_step.damage * player.damage_mult),
 		&"poise_damage": _step.poise_damage,
 		&"knockback": Vector2(_step.knockback.x * player.facing, _step.knockback.y),
 		&"attacker": player,

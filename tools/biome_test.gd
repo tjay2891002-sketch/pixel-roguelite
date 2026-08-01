@@ -43,6 +43,26 @@ func _physics_process(_delta: float) -> bool:
 		var layer = chunk.get_node("TileMapLayer")
 		cave_tiles = layer.tile_set == TileBuilder.build(&"cave")
 		_check(cave_tiles, "chunks built with the cave tileset", "")
+	if _frame == 6:
+		# regenerate as stage 3 -> sewer biome (_regenerate increments first)
+		_stage.stage_index = 1
+		_stage._regenerate()
+	if _frame == 14:
+		_check(_stage._config.id == &"sewer", "stage 3 regenerates as the sewer biome", "id=%s" % _stage._config.id)
+		var before := get_nodes_in_group(&"enemy").size()
+		_stage._spawn_enemy(_stage._rooms[0], &"R", Vector2(64, 64))
+		var enemies := get_nodes_in_group(&"enemy")
+		_check(enemies.size() == before + 1 and enemies[enemies.size() - 1].get("sprite_set") == &"piranha",
+			"enemy override: sewer R-marker spawns a piranha", "")
+		enemies[enemies.size() - 1].queue_free()
+		var boss_found := false
+		for room in _stage._rooms:
+			if room.role == 4:
+				boss_found = true
+		_check(boss_found, "sewer biome generates a full layout (boss room)", "")
+		var chunk2 = _stage.get_node("Chunks").get_child(0)
+		_check(chunk2.get_node("TileMapLayer").tile_set == TileBuilder.build(&"sewer"),
+			"chunks rebuilt with the sewer tileset", "")
 		_finish()
 	return false
 

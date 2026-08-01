@@ -47,6 +47,8 @@ A 2D pixel-art roguelite action-platformer (Dead Cells-like) in **Godot 4.7.1 / 
 | ✅ | P3 meta 进度 UI | 死亡结算面板：带回金币数 + 永久解锁列表（数字键 1-5 购买，SaveStub 持久化）；标题页有提示 |
 | ✅ | P3 高音质战斗音 | Kenney Impact Sounds (CC0)：打击=金属重击 002，击杀=金属重击 001；挥击保留三段拆分 |
 | ✅ | 房间布局扩充 | 战斗房 3→8：高台/双平台/深坑/窄巷/阶梯（combat_d~h，注册进城镇+洞穴两个 biome 池） |
+| ✅ | 第三 biome + 飞行 boss | 下水道 biome（橄榄绿瓦片+食人花炮台敌）按层轮换；新 boss HELIDRONE（set5 无人机，飞行俯冲+弹幕）进轮换，共 4 个 |
+| ✅ | 附魔三选一 | 附魔池改为 攻速/吸血/移速 三条轨道（1/2/3 键购买），共享涨价 10+8·总级数——build 取舍 |
 | ✅ | 连续性 | 记忆文件 + 本文档 |
 
 

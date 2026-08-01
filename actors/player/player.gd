@@ -58,7 +58,10 @@ const X_CENTER_OFFSET := 10.5
 const BASE_MAX_HP := 30
 const LEVEL_DAMAGE_STEP := 0.08
 const LEVEL_HP_STEP := 4
-const ENCHANT_DAMAGE_STEP := 0.12 # per shard-bought rank, per weapon (RunManager)
+## Per-rank strength of the three shard-enchant tracks (RunManager).
+const ENCHANT_ATK_SPEED_STEP := 0.10  # AnimationPlayer speed per rank
+const ENCHANT_MOVE_SPEED_STEP := 0.08 # move speed per rank
+const ENCHANT_LIFESTEAL_STEP := 0.06  # fraction of damage healed per rank
 
 ## Stat multipliers — read by attack.gd (damage), steer() (speed),
 ## health.gd (damage taken). Recomputed by _refresh_mults().
@@ -124,8 +127,10 @@ func _ready() -> void:
 	health.poise_broken.connect(_on_poise_broken)
 	health.died.connect(_on_died)
 	EventBus.leveled_up.connect(_on_leveled_up)
+	EventBus.hit_landed.connect(_on_hit_landed) # lifesteal enchant
 	_apply_level_stats()
 	_refresh_mults()
+	apply_enchants()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -303,7 +308,7 @@ func apply_buff(id: StringName) -> void:
 
 func _refresh_mults() -> void:
 	damage_mult = 1.0 + LEVEL_DAMAGE_STEP * (RunManager.level - 1)
-	speed_mult = 1.0
+	speed_mult = 1.0 + ENCHANT_MOVE_SPEED_STEP * RunManager.enchant_rank(&"move_speed")
 	damage_taken_mult = 1.0
 	for id in _buffs:
 		var b: Dictionary = BUFFS[id]
@@ -322,9 +327,25 @@ func _on_leveled_up(_lvl: int) -> void:
 	_refresh_mults()
 
 
-## Enchant multiplier for the HELD weapon (shard enchants are per weapon id).
-func weapon_enchant_mult() -> float:
-	return 1.0 + ENCHANT_DAMAGE_STEP * RunManager.enchant_rank(weapon.id)
+## Shard enchants (RunManager tracks): attack speed lives on the
+## AnimationPlayer (call tracks scale with it), move speed rides
+## _refresh_mults, lifesteal listens on the bus. Called on _ready and by
+## the enchant pool after each purchase.
+func apply_enchants() -> void:
+	anim_player.speed_scale = 1.0 + ENCHANT_ATK_SPEED_STEP * RunManager.enchant_rank(&"atk_speed")
+
+
+func _on_hit_landed(hit_info: Dictionary) -> void:
+	var rank: int = RunManager.enchant_rank(&"lifesteal")
+	if rank <= 0:
+		return
+	if hit_info.get(&"attacker") != self:
+		return
+	var victim = hit_info.get(&"victim")
+	if victim == null or not victim.is_in_group(&"enemy"):
+		return # no farming crates for health
+	var heal := maxi(1, int(int(hit_info.get(&"damage", 0)) * ENCHANT_LIFESTEAL_STEP * rank))
+	health.hp = mini(health.hp + heal, health.max_hp)
 
 
 func _on_poise_broken() -> void:
