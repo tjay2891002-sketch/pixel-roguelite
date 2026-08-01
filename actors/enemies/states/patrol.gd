@@ -23,3 +23,7 @@ func physics_update(delta: float) -> void:
 	elif actor.global_position.x < lo:
 		_dir = 1.0
 	actor.walk(_dir, delta)
+	if actor.flying:
+		# descend home after disengaging: flyers kept their exit altitude
+		# forever and hovered out of reach
+		actor.velocity.y = clampf((actor.home_y - actor.global_position.y) * 2.0, -40.0, 40.0)

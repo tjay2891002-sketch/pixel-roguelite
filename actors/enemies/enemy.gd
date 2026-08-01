@@ -33,6 +33,7 @@ var attack_cooldown := 0.0
 
 var facing := -1
 var home_x := 0.0
+var home_y := 0.0 # flyers descend back to this altitude after disengaging
 var target: Node2D = null # detected player
 ## Hard confinement: the stage sets this at spawn so enemies can never leave
 ## their room (patrol/chase/knockback all respect it). Empty = unconfined.
@@ -74,6 +75,7 @@ const PIRANHA_ANIMS = preload("res://actors/enemies/piranha_anims.gd")
 func _ready() -> void:
 	state_machine = $StateMachine
 	home_x = global_position.x
+	home_y = global_position.y
 	add_to_group(&"enemy")
 	visual = get_node_or_null("Visual")
 	if visual == null:
@@ -141,7 +143,7 @@ func set_facing(dir: int) -> void:
 func _on_state_sprite_anim(state_name: StringName) -> void:
 	match state_name:
 		&"Idle": visual.play(&"idle")
-		&"Patrol", &"Chase": visual.play(&"run")
+		&"Patrol", &"Chase": visual.play(&"run" if move_speed > 0.0 else &"idle") # stationary mobs (piranha) stand idle, not mouth-flap run
 		&"Hover": visual.play(&"idle") # flyers idle-hover while approaching
 		&"Telegraph": visual.play(&"attack", 0.4)
 		&"Attack", &"RangedAttack", &"Swoop": visual.play(&"attack", 2.0)

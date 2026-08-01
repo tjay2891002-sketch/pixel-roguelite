@@ -34,6 +34,10 @@ func exit() -> void:
 func physics_update(delta: float) -> void:
 	_timer -= delta
 	actor.velocity.x = 0.0
+	if actor.flying:
+		# flyers must HOLD the telegraph spot: leftover hover velocity made
+		# the swoop start off-line — the aim preview lied about the path
+		actor.velocity.y = 0.0
 	# red blink — readable even in greybox
 	actor.visual.modulate = Color(1.0, 0.4, 0.4) if int(_timer * 12.0) % 2 == 0 else Color.WHITE
 	# attack warning lines (aim_mode): spitter aims at the player live,
