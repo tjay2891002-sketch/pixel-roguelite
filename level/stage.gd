@@ -10,6 +10,7 @@ const SFX := preload("res://fx/sfx_builder.gd")
 const ShopStand := preload("res://level/shop_stand.tscn")
 const Drops := preload("res://level/drops.gd")
 const BossScene := preload("res://actors/enemies/boss.tscn")
+const EnchantPool := preload("res://level/enchant_pool.gd")
 ## Boss rotation: cycled by stage_index so every stage's fight differs.
 const BOSS_SCENES := [
 	preload("res://actors/enemies/boss.tscn"),          # Gatekeeper (melee + volleys)
@@ -66,6 +67,7 @@ var _boss = null # the boss whose bar is showing (freed after the kill)
 @onready var _xp_fill: ColorRect = $HUD/XpBarFill
 @onready var _lv_label: Label = $HUD/LvLabel
 @onready var _cell_label: Label = $HUD/CellLabel
+@onready var _shard_label: Label = $HUD/ShardLabel
 @onready var _info_label: Label = $HUD/InfoLabel
 @onready var _status_row: HBoxContainer = $HUD/StatusRow
 @onready var _title_overlay: CanvasLayer = $TitleOverlay
@@ -111,10 +113,13 @@ func _process(_delta: float) -> void:
 		_xp_fill.offset_right = 16.0 + 44.0 * (float(RunManager.xp) / RunManager.xp_needed())
 		_lv_label.text = "Lv%d" % RunManager.level
 		_cell_label.text = "x %d" % int(SaveStub.data.get("currency", 0))
+		_shard_label.text = "x %d" % int(SaveStub.data.get("shards", 0))
 		# attack power in parens next to the weapon: step-1 damage with the
-		# current mults (level + rage) folded in
-		var atk := int(player.weapon.steps[0].damage * player.damage_mult)
-		_info_label.text = "stage: %d   %s (%d)" % [stage_index + 1, player.weapon.display_name, atk]
+		# current mults (level + rage + enchant) folded in; +N = enchant rank
+		var atk := int(player.weapon.steps[0].damage * player.damage_mult * player.weapon_enchant_mult())
+		var rank: int = RunManager.enchant_rank(player.weapon.id)
+		var wname: String = player.weapon.display_name + ("+%d" % rank if rank > 0 else "")
+		_info_label.text = "stage: %d   %s (%d)" % [stage_index + 1, wname, atk]
 		_update_status_row()
 		if _boss_bar.visible and is_instance_valid(_boss):
 			# 200px bar, bottom-center of the 480x270 viewport
@@ -419,26 +424,28 @@ func _make_blockers(room: Dictionary, pl: Dictionary) -> void:
 		room.blockers.append({"body": blocker, "shape": shape, "vis": vis})
 
 
+## The next-stage door hugs the boss room's RIGHT WALL (marker-independent):
+## one flag + trigger at the floor line by the right edge.
 func _make_boss_door(room: Dictionary, pl: Dictionary) -> void:
-	for marker in pl.chunk.spawn_points(&"B"):
-		var area := Area2D.new()
-		area.collision_layer = 256
-		area.collision_mask = 2
-		var shape := CollisionShape2D.new()
-		var circle := CircleShape2D.new()
-		circle.radius = 12.0
-		shape.shape = circle
-		area.add_child(shape)
-		var flag := Polygon2D.new()
-		flag.polygon = PackedVector2Array([
-			Vector2(-1, -16), Vector2(1, -16), Vector2(1, 0), Vector2(-1, 0),
-			Vector2(1, -16), Vector2(12, -13), Vector2(1, -10)])
-		flag.color = Color("c0ca33")
-		area.add_child(flag)
-		add_child(area)
-		area.global_position = marker.global_position
-		area.body_entered.connect(_on_boss_door_entered.bind(room))
-		room.boss_flags.append(flag)
+	var area := Area2D.new()
+	area.collision_layer = 256
+	area.collision_mask = 2
+	var shape := CollisionShape2D.new()
+	var circle := CircleShape2D.new()
+	circle.radius = 12.0
+	shape.shape = circle
+	area.add_child(shape)
+	var flag := Polygon2D.new()
+	flag.polygon = PackedVector2Array([
+		Vector2(-1, -16), Vector2(1, -16), Vector2(1, 0), Vector2(-1, 0),
+		Vector2(1, -16), Vector2(12, -13), Vector2(1, -10)])
+	flag.color = Color("c0ca33")
+	area.add_child(flag)
+	add_child(area)
+	var floor_top: float = pl.pos.y + (pl.chunk.cell_size().y - 1) * TILE
+	area.global_position = Vector2(pl.pos.x + room.bounds.size.x - 20.0, floor_top)
+	area.body_entered.connect(_on_boss_door_entered.bind(room))
+	room.boss_flags.append(flag)
 
 
 # --- signals -----------------------------------------------------------------
@@ -476,9 +483,12 @@ func _on_enemy_killed(enemy: Node2D) -> void:
 				for flag in room.boss_flags:
 					flag.color = Color("ffd54a")
 				if room.role == 4:
-					# boss kill fanfare + reward burst at the corpse
+					# boss kill fanfare + reward burst at the corpse + the
+					# enchant pool surfaces (spend shards on the held weapon)
 					AudioBus.play_sfx(SFX.levelup(), player.global_position)
 					Drops.spawn_boss_reward(self, enemy.global_position)
+					# deferred: enemy_killed fires inside the physics flush
+					_spawn_enchant_pool.call_deferred(room)
 			return
 
 
@@ -487,6 +497,14 @@ func _on_boss_door_entered(_body: Node2D, room: Dictionary) -> void:
 		AudioBus.play_sfx(SFX.deny(), player.global_position)
 		return
 	_regenerate.call_deferred()
+
+
+## Boss-clear reward: the enchant pool surfaces at the room's center floor.
+## Deferred out of the kill signal (physics flush — it builds shapes).
+func _spawn_enchant_pool(room: Dictionary) -> void:
+	var pool: Area2D = EnchantPool.new()
+	add_child(pool)
+	pool.global_position = Vector2(room.bounds.get_center().x, room.bounds.end.y - 16.0)
 
 
 func _on_leveled_up(_lvl: int) -> void:

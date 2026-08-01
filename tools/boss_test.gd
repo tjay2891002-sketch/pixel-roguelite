@@ -13,6 +13,7 @@ var _stage
 var _player
 var _boss_room
 var _boss
+var _pool
 var _failures: Array[String] = []
 
 
@@ -107,16 +108,60 @@ func _physics_process(_delta: float) -> bool:
 				"door flag turns gold", "")
 			_check(root.get_node("RunManager").level == 3, "boss xp 40 levels 1->3 (15/25)", "level=%d" % root.get_node("RunManager").level)
 			var pickups := 0
+			var shards := 0
 			for child in _stage.get_children():
 				if child is Area2D and child.get("kind") != null:
 					pickups += 1
-			_check(pickups >= 3, "boss drops a reward burst (weapon+potion+cells)", "pickups=%d" % pickups)
+					if child.kind == &"shards":
+						shards += 1
+			_check(pickups >= 3, "boss drops a reward burst (weapon+potion+shards)", "pickups=%d" % pickups)
+			_check(shards >= 2, "boss reward pays SHARDS (enchant currency)", "shards=%d" % shards)
+		# --- D: enchant pool (spend shards on the held weapon)
+		42:
+			root.get_node("SaveStub").data["shards"] = 12
+			_pool = get_first_node_in_group(&"enchant_pool")
+			_check(_pool != null, "enchant pool surfaces after the clear", "")
+			_player.global_position = _pool.global_position
+		46:
+			_tap(&"interact")
+		49:
+			var rm = root.get_node("RunManager")
+			_check(rm.enchant_rank(&"sword") == 1, "F enchants the sword to +1", "rank=%d" % rm.enchant_rank(&"sword"))
+			_check(int(root.get_node("SaveStub").data["shards"]) == 2, "enchant costs 10 (12->2)", "shards=%d" % int(root.get_node("SaveStub").data["shards"]))
+			_check(absf(_player.weapon_enchant_mult() - 1.12) < 0.001, "+1 = 12%% more weapon damage", "mult=%.3f" % _player.weapon_enchant_mult())
+		50:
+			_tap(&"interact") # rank 2 costs 15, we have 2 -> denied
+		54:
+			_check(root.get_node("RunManager").enchant_rank(&"sword") == 1, "broke: second enchant denied", "rank=%d" % root.get_node("RunManager").enchant_rank(&"sword"))
+			# the door hugs the boss room's right wall
+			var door_x: float = _boss_room.boss_flags[0].get_parent().global_position.x
+			_check(door_x > _boss_room.bounds.get_center().x + _boss_room.bounds.size.x * 0.25,
+				"door sits right-of-center by the right wall", "door_x=%.0f" % door_x)
 			_stage._on_boss_door_entered(null, _boss_room)
-		47:
+		60:
 			_check(_stage.stage_index == 1, "cleared door advances the stage", "stage_index=%d" % _stage.stage_index)
 			_check(not _stage._boss_bar.visible, "bar stays hidden on the next stage", "")
 			_finish()
 	return false
+
+
+func _tap(action: StringName) -> void:
+	_press(action)
+	_release.call_deferred(action)
+
+
+func _press(action: StringName) -> void:
+	var event := InputEventAction.new()
+	event.action = action
+	event.pressed = true
+	Input.parse_input_event(event)
+
+
+func _release(action: StringName) -> void:
+	var event := InputEventAction.new()
+	event.action = action
+	event.pressed = false
+	Input.parse_input_event(event)
 
 
 func _check(condition: bool, what: String, detail := "") -> void:

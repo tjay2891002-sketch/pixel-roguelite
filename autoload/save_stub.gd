@@ -49,6 +49,12 @@ func add_currency(amount: int) -> void:
 	data["currency"] = int(data.get("currency", 0)) + amount
 
 
+## Shards (魔晶) — the ENCHANT currency: crate drops + boss rewards. Cells
+## (above) stay the shop currency; shards feed the boss-room enchant pool.
+func add_shards(amount: int) -> void:
+	data["shards"] = int(data.get("shards", 0)) + amount
+
+
 # --- weapon unlock pool ------------------------------------------------------
 
 func unlocked_weapons() -> Array:

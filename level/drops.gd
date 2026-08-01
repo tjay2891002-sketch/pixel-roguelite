@@ -16,12 +16,14 @@ const WEAPON_POOL := [
 ]
 
 ## [kind, weight] — potion payload is a fraction of max hp, resolved on spawn.
+## cells are NOT here on purpose: crate rolls pay SHARDS (the enchant
+## currency); cells come from treasure rooms and feed the shop.
 const TABLE := [
 	[&"weapon", 15],
 	[&"potion", 25],
 	[&"rage", 20],
 	[&"swift", 20],
-	[&"cells", 15],
+	[&"shards", 15],
 	[&"curse", 5],
 ]
 
@@ -54,12 +56,12 @@ static func spawn(parent: Node, kind: StringName, pos: Vector2, payload = null) 
 			&"weapon":
 				payload = _pick_weapon(parent)
 				if payload == null:
-				# pool exhausted (shouldn't happen with 3 weapons) -> cells
-					kind = &"cells"
+				# pool exhausted -> shards fallback
+					kind = &"shards"
 					payload = 4
 			&"potion":
 				payload = _potion_amount(parent)
-			&"cells":
+			&"shards":
 				payload = 4
 	var p: Area2D = load("res://level/pickup.gd").new(kind, payload)
 	parent.add_child(p)
@@ -99,10 +101,10 @@ static func _rng_float(parent: Node) -> float:
 	return randf()
 
 
-## Boss kill reward: a weapon (unlocked pool), a potion, and a cell burst,
+## Boss kill reward: a weapon (unlocked pool), a potion, and a shard burst,
 ## deferred (the kill signal fires inside the physics flush).
 static func spawn_boss_reward(parent: Node, pos: Vector2) -> void:
 	spawn.call_deferred(parent, &"weapon", pos + Vector2(-24.0, -8.0))
 	spawn.call_deferred(parent, &"potion", pos + Vector2(0.0, -8.0))
-	spawn.call_deferred(parent, &"cells", pos + Vector2(18.0, -6.0), 10)
-	spawn.call_deferred(parent, &"cells", pos + Vector2(30.0, -10.0), 10)
+	spawn.call_deferred(parent, &"shards", pos + Vector2(18.0, -6.0), 10)
+	spawn.call_deferred(parent, &"shards", pos + Vector2(30.0, -10.0), 10)

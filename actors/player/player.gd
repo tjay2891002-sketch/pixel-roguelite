@@ -58,6 +58,7 @@ const X_CENTER_OFFSET := 10.5
 const BASE_MAX_HP := 30
 const LEVEL_DAMAGE_STEP := 0.08
 const LEVEL_HP_STEP := 4
+const ENCHANT_DAMAGE_STEP := 0.12 # per shard-bought rank, per weapon (RunManager)
 
 ## Stat multipliers — read by attack.gd (damage), steer() (speed),
 ## health.gd (damage taken). Recomputed by _refresh_mults().
@@ -319,6 +320,11 @@ func _on_leveled_up(_lvl: int) -> void:
 	# a level also patches you up a little — the heal reads as a reward
 	health.hp = mini(health.hp + LEVEL_HP_STEP, health.max_hp)
 	_refresh_mults()
+
+
+## Enchant multiplier for the HELD weapon (shard enchants are per weapon id).
+func weapon_enchant_mult() -> float:
+	return 1.0 + ENCHANT_DAMAGE_STEP * RunManager.enchant_rank(weapon.id)
 
 
 func _on_poise_broken() -> void:

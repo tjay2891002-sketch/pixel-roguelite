@@ -1,5 +1,5 @@
 extends Area2D
-## Pickup — a crate drop on the floor. Cells collect on contact; the CURSE
+## Pickup — a crate drop on the floor. Shards collect on contact; the CURSE
 ## also fires on contact (it's the smash-a-crate landmine — opt-in would
 ## make it toothless). Everything else (weapon/potion/rage/swift) waits for
 ## a confirm: walk up and press interact (F) — a potion left on the floor
@@ -19,8 +19,8 @@ const SWAP_DROP_OFFSET := Vector2(-16.0, 0.0)
 ## Kinds that require the interact (F) confirm; the rest collect on contact.
 const F_KINDS := [&"weapon", &"potion", &"rage", &"swift"]
 
-var kind: StringName = &"cells"
-var payload = null # WeaponData for weapon; int heal for potion; int for cells
+var kind: StringName = &"shards"
+var payload = null # WeaponData for weapon; int heal for potion; int for shards
 
 var _player_near := false
 var _prompt: Label = null # "[F] ..." hint over confirm pickups
@@ -91,13 +91,10 @@ func _collect(player) -> void:
 		&"curse":
 			player.apply_buff(kind)
 			_play(SFX.deny())
-		&"cells":
+		&"shards":
 			var save = get_tree().root.get_node_or_null("SaveStub")
 			if save:
-				save.add_currency(int(payload))
-			var bus = get_tree().root.get_node_or_null("EventBus")
-			if bus:
-				bus.currency_dropped.emit(int(payload), global_position)
+				save.add_shards(int(payload))
 			_play(SFX.pickup())
 	queue_free()
 
@@ -136,12 +133,9 @@ func _build_visual() -> void:
 			_make_prompt("[F] " + ("RAGE" if kind == &"rage" else "SWIFT"))
 		&"curse":
 			add_child(_diamond(_buff_color(), 6.0))
-		&"cells":
-			var cell := Polygon2D.new()
-			cell.polygon = PackedVector2Array([
-				Vector2(-4, -4), Vector2(4, -4), Vector2(4, 4), Vector2(-4, 4)])
-			cell.color = Color("ffd54a")
-			add_child(cell)
+		&"shards":
+			# light-crystal diamond — reads "special currency", not a buff
+			add_child(_diamond(Color("80d8ff"), 4.5))
 
 
 func _make_prompt(text: String) -> void:

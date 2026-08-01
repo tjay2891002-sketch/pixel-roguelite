@@ -12,6 +12,11 @@ var biome_index: int = 0
 var level := 1
 var xp := 0
 
+## Weapon enchants (run-scoped): weapon id -> rank, bought with shards at
+## the boss-room enchant pool. +12% weapon damage per rank.
+const ENCHANT_MAX_RANK := 5
+var enchants := {}
+
 var _rng := RandomNumberGenerator.new()
 
 
@@ -25,6 +30,7 @@ func start_run(seed: int = 0) -> void:
 	biome_index = 0
 	level = 1
 	xp = 0
+	enchants.clear()
 	_rng.seed = run_seed
 	print("[RunManager] run started, seed=%d" % run_seed)
 
@@ -49,6 +55,21 @@ func add_xp(amount: int) -> void:
 ## roll ORDER — combat order isn't seeded, so drops aren't either; fine.
 func roll_float() -> float:
 	return _rng.randf()
+
+
+# --- weapon enchants ----------------------------------------------------------
+
+func enchant_rank(weapon_id: StringName) -> int:
+	return int(enchants.get(weapon_id, 0))
+
+
+## Shard cost of the NEXT rank for this weapon (10/15/20/25/30).
+func enchant_cost(weapon_id: StringName) -> int:
+	return 10 + 5 * enchant_rank(weapon_id)
+
+
+func add_enchant(weapon_id: StringName) -> void:
+	enchants[weapon_id] = mini(enchant_rank(weapon_id) + 1, ENCHANT_MAX_RANK)
 
 
 ## Deterministic RNG for a stage — any stage reproduces in isolation

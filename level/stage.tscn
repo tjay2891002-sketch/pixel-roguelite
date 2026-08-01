@@ -67,6 +67,18 @@ offset_top = 40.0
 theme_override_font_sizes/font_size = 8
 text = "x 0"
 
+[node name="ShardIcon" type="Polygon2D" parent="HUD"]
+position = Vector2(70, 46)
+color = Color(0.5, 0.85, 1, 1)
+polygon = PackedVector2Array(0, -5, 4, 0, 0, 5, -4, 0)
+
+[node name="ShardLabel" type="Label" parent="HUD"]
+offset_left = 78.0
+offset_top = 40.0
+theme_override_colors/font_color = Color(0.5, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 8
+text = "x 0"
+
 [node name="InfoLabel" type="Label" parent="HUD"]
 offset_left = 8.0
 offset_top = 58.0
