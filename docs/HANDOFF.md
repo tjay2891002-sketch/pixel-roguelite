@@ -21,7 +21,7 @@ A 2D pixel-art roguelite action-platformer (Dead Cells-like) in **Godot 4.7.1 / 
 - **Audio**: village BGM (Music bus), combat hit=`Sword Impact`, swing=`sfx_swing_1/2/3.ogg` — one whoosh per combo step (split from freesound "Whoosh Triple", peaks normalized, attack.gd adds a pitch ladder 1.0/1.06/0.94 so the finisher reads heavier), other SFX procedural in `fx/sfx_builder.gd`.
 - **Props**: crates/barrels destructible (solid to player, roll-through smashes, 12 dmg blast vs enemies); sign/street-lamp decor z=-1 behind actors (was blocking the view).
 - **Progression**: kill XP → levels on RunManager (+8% damage, +4 max hp & small heal per level; HUD shows a blue XP bar + Lv label); crates drop weapon-swap (pool: sword/dagger/NEW heavy axe — walk-up + F to swap, old weapon drops aside) / heal potion 30% / rage+swift buffs / curse debuff / cells (`level/drops.gd` table, `level/pickup.gd`). Shop buys also moved to F. HUD: weapon line shows attack power in parens (step-1 dmg × mults); StatusRow shows colored buff chips with countdowns, hidden when none active. Potions + rage/swift are F-confirm too (leave them on the floor for later); cells auto-collect, curse stays a contact landmine by design. Props never scatter onto T markers (a solid crate on a stand shoved the player out of range — stage_test flake).
-- **Boss**: the Gatekeeper (`actors/enemies/boss.tscn` + `boss_brain.gd` child, heavy art at 1.6x). Entering the boss room locks the player in and shows the bottom GATEKEEPER bar; <=50% hp enrages (1.8x speed, 0.65x telegraph, red tint + roar, alternating melee / 3-Ball spread volleys — the telegraph matches the incoming attack: melee arc vs live aim line). Kill (120 hp, 40 xp) clears the room, turns the door flag gold, and only THEN does the boss door advance the stage (touch while alive = deny buzz).
+- **Bosses**: three rotated by stage_index (`BOSS_SCENES`) — GATEKEEPER (heavy art 1.6x, melee + phase-2 3-ball volleys), HEXCASTER (set-4 witch, ranged 3-ball from phase 1, enrage = 5-ball), STREET STRAY (set-3 redcap, fast melee, enrage = pure speed). Phase-2 behavior is per-boss data on `boss_brain.gd` exports (speed/telegraph mults, volley count, alternate toggle). Boss room locks the player in, bottom bar shows the brain's bar_name; kill (40 xp) triggers fanfare + a reward burst (unlocked-pool weapon + potion + cells) and turns the door flag gold — only then does the door advance the stage.
 
 ## 当前任务清单 / Task List
 
@@ -36,6 +36,7 @@ A 2D pixel-art roguelite action-platformer (Dead Cells-like) in **Godot 4.7.1 / 
 | ✅ | 升级 + 掉落 | 杀怪得经验升级（加攻/加血）；箱子掉武器（新重斧）/药瓶/buff/curse/细胞 |
 | ✅ | 武器解锁池 | 6 武器（剑/匕/枪/巨剑/斧/锤）；商店卖解锁（细胞付费，SaveStub 持久化），已解锁才进掉落池；暂停菜单可见已解锁 |
 | ✅ | Boss 战 | Gatekeeper：进房锁门+大血条，半血狂暴（提速+弹幕交替），击破后开门进下一层 |
+| ✅ | Boss 轮换 + 击杀奖励 | 素材库 set3/4 启用：女巫 HEXCASTER（远程弹幕）+ 红帽 STREET STRAY（快速近战），按层轮换；击杀掉武器+药瓶+细胞奖励雨 |
 | ✅ | 连续性 | 记忆文件 + 本文档 |
 
 | 📋 P2 | Sunny Land 弹簧机关 | mushroom-spring 素材已备，做弹跳平台 |

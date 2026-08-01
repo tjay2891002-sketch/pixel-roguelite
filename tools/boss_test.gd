@@ -34,6 +34,27 @@ func _physics_process(_delta: float) -> bool:
 				_boss = room.boss
 
 	match _frame:
+		# --- boss pool smoke: the other two bosses build and are wired
+		2:
+			var witch = load("res://actors/enemies/witch_boss.tscn").instantiate()
+			var redcap = load("res://actors/enemies/redcap_boss.tscn").instantiate()
+			_stage.add_child(witch)
+			_stage.add_child(redcap)
+			witch.global_position = Vector2(-600, -200)
+			redcap.global_position = Vector2(-700, -200)
+		3:
+			var witch = _stage.get_node("WitchBoss")
+			var redcap = _stage.get_node("RedcapBoss")
+			_check(witch.get_node("Brain").bar_name == "HEXCASTER", "witch boss: bar name", "")
+			_check(witch.attack_state == &"RangedAttack" and witch.volley_count == 3,
+				"witch boss: ranged from phase 1, 3-ball", "")
+			_check(witch.get_node("Brain").enrage_volley_count == 5, "witch enrage: 5-ball", "")
+			_check(witch.visual.sprite_frames != null, "witch anims built", "")
+			_check(redcap.get_node("Brain").bar_name == "STREET STRAY", "redcap boss: bar name", "")
+			_check(not redcap.get_node("Brain").enrage_alternate, "redcap enrage: pure melee", "")
+			_check(redcap.visual.sprite_frames != null, "redcap anims built", "")
+			witch.queue_free()
+			redcap.queue_free()
 		# --- A: boss presence + sealed door + bar follows lock state
 		4:
 			_check(_boss_room != null, "found the boss room", "")
@@ -44,6 +65,7 @@ func _physics_process(_delta: float) -> bool:
 		8:
 			_check(_boss_room.locked, "entering the boss room locks it", "")
 			_check(_stage._boss_bar.visible, "boss bar shows during the fight", "")
+			_check(_stage._boss_name.text == "GATEKEEPER", "bar names the stage-1 boss", "name=%s" % _stage._boss_name.text)
 			_stage._on_boss_door_entered(null, _boss_room)
 		11:
 			_check(_stage.stage_index == 0, "door denies advance while the boss lives", "")
@@ -84,6 +106,11 @@ func _physics_process(_delta: float) -> bool:
 			_check(_boss_room.boss_flags.is_empty() or _boss_room.boss_flags[0].color == Color("ffd54a"),
 				"door flag turns gold", "")
 			_check(root.get_node("RunManager").level == 3, "boss xp 40 levels 1->3 (15/25)", "level=%d" % root.get_node("RunManager").level)
+			var pickups := 0
+			for child in _stage.get_children():
+				if child is Area2D and child.get("kind") != null:
+					pickups += 1
+			_check(pickups >= 3, "boss drops a reward burst (weapon+potion+cells)", "pickups=%d" % pickups)
 			_stage._on_boss_door_entered(null, _boss_room)
 		47:
 			_check(_stage.stage_index == 1, "cleared door advances the stage", "stage_index=%d" % _stage.stage_index)

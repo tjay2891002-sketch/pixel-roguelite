@@ -10,6 +10,12 @@ const SFX := preload("res://fx/sfx_builder.gd")
 const ShopStand := preload("res://level/shop_stand.tscn")
 const Drops := preload("res://level/drops.gd")
 const BossScene := preload("res://actors/enemies/boss.tscn")
+## Boss rotation: cycled by stage_index so every stage's fight differs.
+const BOSS_SCENES := [
+	preload("res://actors/enemies/boss.tscn"),          # Gatekeeper (melee + volleys)
+	preload("res://actors/enemies/witch_boss.tscn"),    # Hexcaster (ranged volleys)
+	preload("res://actors/enemies/redcap_boss.tscn"),   # Street Stray (fast melee)
+]
 const DestructibleProp := preload("res://level/destructible_prop.gd")
 const PROPS := [
 	preload("res://assets/level/tiles/prop_barrel.png"),
@@ -70,6 +76,7 @@ var _boss = null # the boss whose bar is showing (freed after the kill)
 @onready var _juice: Node = $Juice
 @onready var _boss_bar: Control = $HUD/BossBar
 @onready var _boss_fill: ColorRect = $HUD/BossBar/BossBarFill
+@onready var _boss_name: Label = $HUD/BossBar/BossName
 
 
 func _ready() -> void:
@@ -258,10 +265,10 @@ func _scatter_props(room: Dictionary, pl: Dictionary) -> void:
 			sprite.position = Vector2(px, floor_top - tex.get_height() / 2.0)
 
 
-## The boss: one Gatekeeper at the room's center floor. It joins
+## The boss: rotated through the pool by stage_index. It joins
 ## room.enemies, so the standard kill path clears/unlocks the room.
 func _spawn_boss(room: Dictionary, pl: Dictionary) -> void:
-	var boss := BossScene.instantiate()
+	var boss = BOSS_SCENES[stage_index % BOSS_SCENES.size()].instantiate()
 	add_child(boss)
 	var floor_top: float = pl.pos.y + (pl.chunk.cell_size().y - 1) * TILE
 	boss.global_position = Vector2(pl.pos.x + room.bounds.size.x * 0.5, floor_top - 18.0)
@@ -468,6 +475,10 @@ func _on_enemy_killed(enemy: Node2D) -> void:
 				# the boss door turns gold once the room is cleared
 				for flag in room.boss_flags:
 					flag.color = Color("ffd54a")
+				if room.role == 4:
+					# boss kill fanfare + reward burst at the corpse
+					AudioBus.play_sfx(SFX.levelup(), player.global_position)
+					Drops.spawn_boss_reward(self, enemy.global_position)
 			return
 
 
@@ -575,6 +586,8 @@ func _set_room_locked(room: Dictionary, locked: bool) -> void:
 	if room.role == 4:
 		if locked:
 			_boss = room.boss
+			var brain = _boss.get_node_or_null("Brain")
+			_boss_name.text = brain.bar_name if brain else "BOSS"
 			_boss_bar.visible = true
 		else:
 			_boss_bar.visible = false
