@@ -21,11 +21,18 @@ const SWAP_DROP_OFFSET := Vector2(-16.0, 0.0)
 ## Kinds that require the interact (F) confirm; the rest collect on contact.
 const F_KINDS := [&"weapon", &"potion", &"rage", &"swift"]
 
+## Weapon pickups are DUAL-purpose: tap F = equip/swap, LONG-PRESS F =
+## dismantle into shards (the spare-weapon sink).
+const DISMANTLE_HOLD := 0.45
+
 var kind: StringName = &"shards"
 var payload = null # WeaponData for weapon; int heal for potion; int for shards
 
 var _player_near := false
 var _prompt: Label = null # "[F] ..." hint over confirm pickups
+var _prompt_text := ""
+var _holding := false   # weapon: F currently held
+var _hold_t := 0.0
 
 
 func _init(p_kind: StringName = &"cells", p_payload = null) -> void:
@@ -63,12 +70,60 @@ func _on_proximity(body: Node2D, entered: bool) -> void:
 	_player_near = entered
 	if _prompt:
 		_prompt.visible = entered
+	if not entered:
+		_cancel_hold()
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if kind in F_KINDS and _player_near and event.is_action_pressed(&"interact"):
+	if not (kind in F_KINDS and _player_near):
+		return
+	if event.is_action_pressed(&"interact"):
 		get_viewport().set_input_as_handled() # one pickup/stand per press
-		_collect(get_tree().get_first_node_in_group(&"player"))
+		if kind == &"weapon":
+			# dual-purpose: hold to dismantle, release early to equip
+			_holding = true
+			_hold_t = 0.0
+		else:
+			_collect(get_tree().get_first_node_in_group(&"player"))
+	elif event.is_action_released(&"interact") and kind == &"weapon" and _holding:
+		get_viewport().set_input_as_handled()
+		_cancel_hold()
+		_collect(get_tree().get_first_node_in_group(&"player")) # tap = equip
+
+
+func _physics_process(delta: float) -> void:
+	# game-time ticks (not idle real-time): deterministic under hitstop
+	if _holding:
+		_hold_t += delta
+		if _hold_t >= DISMANTLE_HOLD:
+			_cancel_hold()
+			_dismantle()
+		elif _prompt:
+			_prompt.text = "分解中…"
+
+
+func _cancel_hold() -> void:
+	_holding = false
+	_hold_t = 0.0
+	if _prompt and not _prompt_text.is_empty():
+		_prompt.text = _prompt_text
+
+
+## Long-press payoff: crush the weapon into shards (value = half its unlock
+## cost, min 4). The player keeps whatever they're holding.
+func _dismantle() -> void:
+	var save = get_tree().root.get_node_or_null("SaveStub")
+	if save:
+		save.add_shards(_dismantle_value(payload))
+	_play(SFX.kill()) # crunch
+	queue_free()
+
+
+func _dismantle_value(w: WeaponData) -> int:
+	for entry in Drops.WEAPON_POOL:
+		if (entry[&"data"] as WeaponData).id == w.id:
+			return maxi(4, int(entry[&"cost"]) / 2)
+	return 4
 
 
 func _collect(player) -> void:
@@ -118,7 +173,7 @@ func _build_visual() -> void:
 			label.add_theme_color_override(&"font_color", Color("e8eef2"))
 			label.position = Vector2(-16, -22)
 			add_child(label)
-			_make_prompt("[F]")
+			_make_prompt("[F] 装备 · 长按分解+%d" % _dismantle_value(payload))
 		&"potion":
 			add_child(_bottle(Color.WHITE)) # untinted = heal
 			_make_prompt("[F] 治疗")
@@ -134,11 +189,13 @@ func _build_visual() -> void:
 
 func _make_prompt(text: String) -> void:
 	_prompt = Label.new()
+	_prompt_text = text
 	_prompt.text = text
 	GameFont.apply(_prompt)
 	_prompt.add_theme_font_size_override(&"font_size", 8)
 	_prompt.add_theme_color_override(&"font_color", Color("ffd54a"))
-	_prompt.position = Vector2(-10, -34)
+	# longer weapon prompt (equip + dismantle) needs more left room
+	_prompt.position = Vector2(-38.0 if kind == &"weapon" else -10.0, -34)
 	_prompt.visible = false
 	add_child(_prompt)
 

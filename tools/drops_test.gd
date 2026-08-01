@@ -14,11 +14,13 @@ const Drops := preload("res://level/drops.gd")
 const DestructibleProp := preload("res://level/destructible_prop.gd")
 const CRATE_TEX := preload("res://assets/level/tiles/prop_crate.png")
 const AXE := preload("res://data/weapons/axe.tres")
+const DAGGER := preload("res://data/weapons/dagger.tres")
 
 var _frame := 0
 var _player
 var _dummy
 var _rm
+var _salvage
 var _leveled := 0
 var _failures: Array[String] = []
 
@@ -118,6 +120,22 @@ func _physics_process(_delta: float) -> bool:
 				if child is Area2D and child.get("kind") != null:
 					found = true
 			_check(found, "smashed crate spawns a pickup", "")
+		# --- H: long-press F dismantles a spare weapon into shards
+		86:
+			# clean area: leftover drops near the crate/dummy can steal the F
+			_teleport(Vector2(420, 139))
+			_salvage = Drops.spawn(root.get_node("Playground"), &"weapon", _player.global_position, DAGGER)
+			root.get_node("SaveStub").data["shards"] = 5
+		88:
+			_press(&"interact") # HELD — no release
+		92:
+			_check(is_instance_valid(_salvage), "short hold has not dismantled yet", "")
+			_check(_player.weapon.id == &"axe", "holding F has not equipped either", "weapon=%s" % _player.weapon.id)
+		138: # 0.45s = 27 game-time ticks + ~5 dispatch lag; f120 raced it
+			_check(not is_instance_valid(_salvage), "long-press dismantles the dagger", "")
+			_check(int(root.get_node("SaveStub").data["shards"]) == 12, "dismantle pays 7 shards (15c/2, 5->12)", "shards=%d" % int(root.get_node("SaveStub").data["shards"]))
+			_check(_player.weapon.id == &"axe", "held weapon untouched by dismantle", "weapon=%s" % _player.weapon.id)
+			_release(&"interact")
 			_finish()
 	return false
 
