@@ -118,10 +118,13 @@ func _physics_process(_delta: float) -> bool:
 			_check(shards >= 2, "boss reward pays SHARDS (enchant currency)", "shards=%d" % shards)
 		# --- D: enchant pool (spend shards on the held weapon)
 		42:
-			root.get_node("SaveStub").data["shards"] = 12
 			_pool = get_first_node_in_group(&"enchant_pool")
 			_check(_pool != null, "enchant pool surfaces after the clear", "")
 			_player.global_position = _pool.global_position
+		44:
+			# set the shard count only AFTER the teleport: shard piles from the
+			# reward burst auto-collect on contact, the amount is seed-dependent
+			root.get_node("SaveStub").data["shards"] = 12
 		46:
 			_tap(&"interact")
 		49:
@@ -137,9 +140,14 @@ func _physics_process(_delta: float) -> bool:
 			var door_x: float = _boss_room.boss_flags[0].get_parent().global_position.x
 			_check(door_x > _boss_room.bounds.get_center().x + _boss_room.bounds.size.x * 0.25,
 				"door sits right-of-center by the right wall", "door_x=%.0f" % door_x)
-			_stage._on_boss_door_entered(null, _boss_room)
-		60:
-			_check(_stage.stage_index == 1, "cleared door advances the stage", "stage_index=%d" % _stage.stage_index)
+			# standing AT the open door must NOT teleport by itself (the user
+			# got force-advanced while picking up the reward burst)
+			_player.global_position = _boss_room.boss_flags[0].get_parent().global_position
+		58:
+			_check(_stage.stage_index == 0, "open door waits for F (no auto-advance)", "stage_index=%d" % _stage.stage_index)
+			_tap(&"interact")
+		65:
+			_check(_stage.stage_index == 1, "F at the door advances the stage", "stage_index=%d" % _stage.stage_index)
 			_check(not _stage._boss_bar.visible, "bar stays hidden on the next stage", "")
 			_finish()
 	return false

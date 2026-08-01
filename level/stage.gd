@@ -11,6 +11,8 @@ const ShopStand := preload("res://level/shop_stand.tscn")
 const Drops := preload("res://level/drops.gd")
 const BossScene := preload("res://actors/enemies/boss.tscn")
 const EnchantPool := preload("res://level/enchant_pool.gd")
+const BossDoor := preload("res://level/boss_door.gd")
+const CoinTex := preload("res://assets/ui/coin.png")
 ## Boss rotation: cycled by stage_index so every stage's fight differs.
 const BOSS_SCENES := [
 	preload("res://actors/enemies/boss.tscn"),          # Gatekeeper (melee + volleys)
@@ -64,7 +66,7 @@ var _boss = null # the boss whose bar is showing (freed after the kill)
 
 @onready var _debug_label: Label = $HUD/DebugLabel
 @onready var _hp_fill: TextureRect = $HUD/HpBarFill
-@onready var _xp_fill: ColorRect = $HUD/XpBarFill
+@onready var _xp_fill: TextureRect = $HUD/XpBarFill
 @onready var _lv_label: Label = $HUD/LvLabel
 @onready var _cell_label: Label = $HUD/CellLabel
 @onready var _shard_label: Label = $HUD/ShardLabel
@@ -109,8 +111,8 @@ func _process(_delta: float) -> void:
 		_camera.global_position = player.global_position.round()
 		# golden fill clipped by hp (44px full bar starting at left edge 16)
 		_hp_fill.offset_right = 16.0 + 44.0 * (float(player.health.hp) / player.health.max_hp)
-		# blue xp bar: same 44px span under the hp bar
-		_xp_fill.offset_right = 16.0 + 44.0 * (float(RunManager.xp) / RunManager.xp_needed())
+		# blue xp bar: 40px fill inside the ornate frame (starts at x=15)
+		_xp_fill.offset_right = 15.0 + 40.0 * (float(RunManager.xp) / RunManager.xp_needed())
 		_lv_label.text = "Lv%d" % RunManager.level
 		_cell_label.text = "x %d" % int(SaveStub.data.get("currency", 0))
 		_shard_label.text = "x %d" % int(SaveStub.data.get("shards", 0))
@@ -377,27 +379,20 @@ func _make_treasure(pl: Dictionary) -> void:
 		rect.size = Vector2(10, 10)
 		shape.shape = rect
 		pickup.add_child(shape)
-		# bright gold cell with a dark outline + a bob, so it reads against tiles
-		var outline := Polygon2D.new()
-		outline.polygon = PackedVector2Array([Vector2(-8, -8), Vector2(8, -8), Vector2(8, 8), Vector2(-8, 8)])
-		outline.color = Color("3a2a10")
-		pickup.add_child(outline)
-		var vis := Polygon2D.new()
-		vis.polygon = PackedVector2Array([Vector2(-6, -6), Vector2(6, -6), Vector2(6, 6), Vector2(-6, 6)])
-		vis.color = Color("ffd54a")
+		# gold coin with a bob, so it reads against tiles
+		var vis := Sprite2D.new()
+		vis.texture = CoinTex
 		pickup.add_child(vis)
 		pickup.add_to_group(&"pickup")
 		add_child(pickup)
 		pickup.global_position = Vector2(marker.global_position.x, floor_top - 6.0)
 		pickup.body_entered.connect(_on_treasure_collected.bind(pickup))
-		# gentle bob so the cell catches the eye — bound to the PICKUP (not the
+		# gentle bob so the coin catches the eye — bound to the PICKUP (not the
 		# stage): a stage-bound infinite tween outlives queue_free(), its freed
 		# targets collapse the loop to 0 duration ("Infinite loop detected").
 		var tween := pickup.create_tween().set_loops()
 		tween.tween_property(vis, "position:y", -4.0, 0.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
 		tween.tween_property(vis, "position:y", 0.0, 0.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
-		tween.parallel().tween_property(outline, "position:y", -4.0, 0.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
-		tween.parallel().tween_property(outline, "position:y", 0.0, 0.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
 
 
 ## Door blockers on every CONNECTED door of a combat room (sealed doors are
@@ -424,28 +419,17 @@ func _make_blockers(room: Dictionary, pl: Dictionary) -> void:
 		room.blockers.append({"body": blocker, "shape": shape, "vis": vis})
 
 
-## The next-stage door hugs the boss room's RIGHT WALL (marker-independent):
-## one flag + trigger at the floor line by the right edge.
+## The next-stage portal hugs the boss room's RIGHT WALL (marker-independent):
+## ornate arch, F-to-enter (no forced teleports mid-loot). The glow child is
+## tracked in room.boss_flags and turns gold when the room clears.
 func _make_boss_door(room: Dictionary, pl: Dictionary) -> void:
-	var area := Area2D.new()
-	area.collision_layer = 256
-	area.collision_mask = 2
-	var shape := CollisionShape2D.new()
-	var circle := CircleShape2D.new()
-	circle.radius = 12.0
-	shape.shape = circle
-	area.add_child(shape)
-	var flag := Polygon2D.new()
-	flag.polygon = PackedVector2Array([
-		Vector2(-1, -16), Vector2(1, -16), Vector2(1, 0), Vector2(-1, 0),
-		Vector2(1, -16), Vector2(12, -13), Vector2(1, -10)])
-	flag.color = Color("c0ca33")
-	area.add_child(flag)
-	add_child(area)
+	var door: Area2D = BossDoor.new()
+	door.room = room
+	door._stage = self
+	add_child(door)
 	var floor_top: float = pl.pos.y + (pl.chunk.cell_size().y - 1) * TILE
-	area.global_position = Vector2(pl.pos.x + room.bounds.size.x - 20.0, floor_top)
-	area.body_entered.connect(_on_boss_door_entered.bind(room))
-	room.boss_flags.append(flag)
+	door.global_position = Vector2(pl.pos.x + room.bounds.size.x - 14.0, floor_top)
+	room.boss_flags.append(door.get_node("Glow"))
 
 
 # --- signals -----------------------------------------------------------------

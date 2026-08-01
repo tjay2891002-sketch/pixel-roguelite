@@ -11,6 +11,7 @@ extends Area2D
 
 const SFX := preload("res://fx/sfx_builder.gd")
 const Drops := preload("res://level/drops.gd")
+const PotionTex := preload("res://assets/ui/icon_potion.png")
 
 ## Where the swap-dropped old weapon lands: far enough that the collecting
 ## player (body 5 + pickup 5 wide) isn't touching it — no re-pickup loop.
@@ -117,22 +118,13 @@ func _build_visual() -> void:
 			add_child(label)
 			_make_prompt("[F]")
 		&"potion":
-			var flask := Polygon2D.new()
-			flask.polygon = PackedVector2Array([
-				Vector2(-4, -6), Vector2(4, -6), Vector2(5, 4), Vector2(-5, 4)])
-			flask.color = Color("e53935")
-			add_child(flask)
-			var neck := Polygon2D.new()
-			neck.polygon = PackedVector2Array([
-				Vector2(-2, -9), Vector2(2, -9), Vector2(2, -6), Vector2(-2, -6)])
-			neck.color = Color("ff8a80")
-			add_child(neck)
+			add_child(_bottle(Color.WHITE)) # untinted = heal
 			_make_prompt("[F] Heal")
-		&"rage", &"swift":
-			add_child(_diamond(_buff_color(), 6.0))
-			_make_prompt("[F] " + ("RAGE" if kind == &"rage" else "SWIFT"))
-		&"curse":
-			add_child(_diamond(_buff_color(), 6.0))
+		&"rage", &"swift", &"curse":
+			# buff potions: the flask tinted per effect
+			add_child(_bottle(_buff_color()))
+			if kind != &"curse":
+				_make_prompt("[F] " + ("RAGE" if kind == &"rage" else "SWIFT"))
 		&"shards":
 			# light-crystal diamond — reads "special currency", not a buff
 			add_child(_diamond(Color("80d8ff"), 4.5))
@@ -155,6 +147,15 @@ func _buff_color() -> Color:
 		&"swift": return Color("4dd0e1")
 		&"curse": return Color("ab47bc")
 	return Color.WHITE
+
+
+## Potion-bottle sprite (heal/buff pickups share the flask; tint separates).
+func _bottle(tint: Color) -> Sprite2D:
+	var s := Sprite2D.new()
+	s.texture = PotionTex
+	s.modulate = tint
+	s.position = Vector2(0, -6)
+	return s
 
 
 func _diamond(color: Color, r: float) -> Polygon2D:
