@@ -16,6 +16,7 @@ var _spitter
 var _flyer
 var _heavy
 var _rat
+var _jam_rat
 var _rat_min_x := 9999.0
 var _rat_max_x := -9999.0
 var _projectile
@@ -130,6 +131,14 @@ func _physics_process(_delta: float) -> bool:
 			_check(_rat_max_x <= 433.0 and _rat_min_x >= 327.0,
 				"rat never leaves the walkable span (margin 28)", "min=%.1f max=%.1f" % [_rat_min_x, _rat_max_x])
 			_check(_rat_max_x - _rat_min_x > 30.0, "patrol still roams inside the fence", "span=%.1f" % (_rat_max_x - _rat_min_x))
+			# head-stand jam: drop a rat ON the player's head — it must slide off
+			_jam_rat = load("res://actors/enemies/rat_rusher.tscn").instantiate()
+			root.get_node("Arena").add_child(_jam_rat)
+			_jam_rat.global_position = _player.global_position + Vector2(0, -22)
+			_jam_rat.velocity = Vector2.ZERO
+		258:
+			var jdx: float = absf(_jam_rat.global_position.x - _player.global_position.x)
+			_check(jdx > 5.0, "head-standing enemy separates off the player", "dx=%.1f" % jdx)
 			_finish()
 	return false
 

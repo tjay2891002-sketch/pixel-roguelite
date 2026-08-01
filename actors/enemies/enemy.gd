@@ -108,6 +108,7 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	attack_cooldown = maxf(attack_cooldown - delta, 0.0)
 	state_machine.physics_update(delta)
+	_separate_from_player() # never stack on the player's head (head-stand jam)
 	if not flying:
 		velocity.y = minf(velocity.y + gravity * delta, 320.0)
 	move_and_slide()
@@ -165,6 +166,21 @@ func _build_sprite_set() -> SpriteFrames:
 func face_target() -> void:
 	if target:
 		set_facing(signi(int(target.global_position.x - global_position.x)))
+
+
+## Overlap separation: when a body lands ON the player (swoop drop, knockback
+## toss), the two bodies wedge — the player can't move and its swings pass
+## under the rider's hurtbox. While truly overlapping, override the state's
+## velocity with a sideways shove so the enemy slides off beside the player.
+## Only the enemy is pushed: the player keeps full control.
+func _separate_from_player() -> void:
+	var p = get_tree().get_first_node_in_group(&"player")
+	if p == null:
+		return
+	var dx = global_position.x - p.global_position.x
+	var dy = global_position.y - p.global_position.y
+	if absf(dx) < 9.0 and dy > -26.0 and dy < 10.0:
+		velocity.x = (1.0 if dx >= 0.0 else -1.0) * maxf(move_speed, 50.0)
 
 
 func target_distance_x() -> float:
