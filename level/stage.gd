@@ -283,7 +283,7 @@ func _setup_room(pl: Dictionary, path_index: int) -> void:
 	_scatter_props(room, pl)
 
 
-## Room props: 1-2 per room at deterministic random floor spots, anchored to
+## Room props: 2-3 per room at deterministic random floor spots, anchored to
 ## the floor. Breakables become DestructibleProps (solid to the player, blast
 ## enemies when smashed); decor stays visual-only at z=-1 — same layer as the
 ## tiles, so actors (z 0) always draw on top and it can't block the view.
@@ -293,7 +293,7 @@ func _setup_room(pl: Dictionary, path_index: int) -> void:
 func _scatter_props(room: Dictionary, pl: Dictionary) -> void:
 	var floor_top: float = pl.pos.y + (pl.chunk.cell_size().y - 1) * TILE
 	var w: float = pl.chunk.bounds().size.x
-	var count := 1 + _rng.randi() % 2
+	var count := 2 + _rng.randi() % 2
 	var margin := 24.0
 	var avoid: Array = []
 	for m in pl.chunk.spawn_points(&"T"):
