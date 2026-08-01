@@ -24,6 +24,14 @@ func exit() -> void:
 
 func physics_update(delta: float) -> void:
 	_timer -= delta
+	# Wall deflection check: move_and_slide leaves the REMAINDER in velocity
+	# — a dash crossing the ceiling would "slide along it" and lie about the
+	# previewed path. If the dash is being eaten by a wall, abort and let
+	# Hover re-approach for a clean angle instead of faking the trajectory.
+	if actor.velocity.length() < actor.swoop_speed * 0.4:
+		actor.velocity = Vector2.ZERO
+		machine.change_state(&"Hover")
+		return
 	actor.velocity = _dir * actor.swoop_speed
 	if _timer <= 0.0:
 		actor.velocity *= 0.3
