@@ -87,7 +87,7 @@ var _config: BiomeConfig # the stage's biome (tiles + enemy overrides)
 @onready var _hp_fill: TextureRect = $HUD/HpBarFill
 @onready var _xp_fill: TextureRect = $HUD/XpBarFill
 @onready var _lv_label: Label = $HUD/LvLabel
-@onready var _cell_label: Label = $HUD/CellLabel
+@onready var _coin_label: Label = $HUD/CoinLabel
 @onready var _shard_label: Label = $HUD/ShardLabel
 @onready var _info_label: Label = $HUD/InfoLabel
 @onready var _status_row: HBoxContainer = $HUD/StatusRow
@@ -138,7 +138,7 @@ func _process(_delta: float) -> void:
 		# blue xp bar: 40px fill inside the ornate frame (starts at x=15)
 		_xp_fill.offset_right = 15.0 + 40.0 * (float(RunManager.xp) / RunManager.xp_needed())
 		_lv_label.text = "Lv%d" % RunManager.level
-		_cell_label.text = "x %d" % int(SaveStub.data.get("currency", 0))
+		_coin_label.text = "x %d" % int(SaveStub.data.get("coins", 0))
 		_shard_label.text = "x %d" % int(SaveStub.data.get("shards", 0))
 		# attack power in parens next to the weapon: step-1 damage with the
 		# current mults (level + rage + enchant) folded in; +N = enchant rank
@@ -480,7 +480,7 @@ func _make_shop(pl: Dictionary) -> void:
 		stand.global_position = Vector2(markers[i].global_position.x, floor_top - 5.0)
 
 
-## Treasure cells (placeholder currency pickup; the shop UI arrives in M5).
+## Treasure coins (the shop/meta money pickup).
 func _make_treasure(pl: Dictionary) -> void:
 	var floor_top: float = pl.pos.y + (pl.chunk.cell_size().y - 1) * TILE
 	for marker in pl.chunk.spawn_points(&"T"):
@@ -650,11 +650,11 @@ func _on_player_died() -> void:
 	get_tree().paused = true
 
 
-## Death screen = the meta seam (P3): banked cells survive death and buy
+## Death screen = the meta seam (P3): banked coins survive death and buy
 ## PERMANENT weapon unlocks. Hotkeys 1..N map to the pool minus the starter.
 func _update_death_text() -> void:
-	var cells := int(SaveStub.data.get("currency", 0))
-	var lines: Array[String] = ["你死了", "", "带回金币: %d" % cells, "", "永久解锁（金币不会因死亡丢失）:"]
+	var coins := int(SaveStub.data.get("coins", 0))
+	var lines: Array[String] = ["你死了", "", "带回金币: %d" % coins, "", "永久解锁（金币不会因死亡丢失）:"]
 	for i in range(Drops.WEAPON_POOL.size()):
 		var entry: Dictionary = Drops.WEAPON_POOL[i]
 		var w: WeaponData = entry[&"data"]
@@ -662,7 +662,7 @@ func _update_death_text() -> void:
 			lines.append("  %s —— 初始武器 ✓" % w.display_name)
 		elif SaveStub.is_weapon_unlocked(w.id):
 			lines.append("  [%d] %s —— 已解锁 ✓" % [i, w.display_name])
-		elif cells >= int(entry[&"cost"]):
+		elif coins >= int(entry[&"cost"]):
 			lines.append("  [%d] %s —— %d 金币" % [i, w.display_name, int(entry[&"cost"])])
 		else:
 			lines.append("  [%d] %s —— %d 金币（不足）" % [i, w.display_name, int(entry[&"cost"])])
@@ -677,11 +677,11 @@ func _try_meta_unlock(idx: int) -> void:
 	if SaveStub.is_weapon_unlocked(w.id):
 		return
 	var cost := int(entry[&"cost"])
-	var cells := int(SaveStub.data.get("currency", 0))
-	if cells < cost:
+	var coins := int(SaveStub.data.get("coins", 0))
+	if coins < cost:
 		AudioBus.play_sfx(SFX.deny(), player.global_position)
 		return
-	SaveStub.data["currency"] = cells - cost
+	SaveStub.data["coins"] = coins - cost
 	SaveStub.unlock_weapon(w.id) # appends + flushes the save
 	AudioBus.play_sfx(SFX.unlock(), player.global_position)
 	_update_death_text()
@@ -732,8 +732,8 @@ func _make_bg_layer(tex: Texture2D, scale: float) -> ParallaxLayer:
 
 
 func _on_treasure_collected(_body: Node2D, pickup: Area2D) -> void:
-	SaveStub.add_currency(5)
-	EventBus.currency_dropped.emit(5, pickup.global_position)
+	SaveStub.add_coins(5)
+	EventBus.coin_dropped.emit(5, pickup.global_position)
 	AudioBus.play_sfx(SFX.pickup(), pickup.global_position)
 	pickup.queue_free()
 

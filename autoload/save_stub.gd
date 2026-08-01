@@ -30,6 +30,9 @@ func load_data() -> void:
 	var parsed: Variant = JSON.parse_string(file.get_as_text())
 	if parsed is Dictionary:
 		data = parsed
+		if data.has("currency"): # legacy save key -> coins
+			data["coins"] = int(data["currency"])
+			data.erase("currency")
 
 
 func flush() -> void:
@@ -43,14 +46,14 @@ func flush() -> void:
 	file.store_string(JSON.stringify(data, "\t"))
 
 
-## Convenience for the currency seam — RunManager/EventBus call this; nothing
-## spends it yet.
-func add_currency(amount: int) -> void:
-	data["currency"] = int(data.get("currency", 0)) + amount
+## Coins (金币) — the shop/meta money: treasure rooms + persists across
+## deaths; spent at shops and on death-screen permanent unlocks.
+func add_coins(amount: int) -> void:
+	data["coins"] = int(data.get("coins", 0)) + amount
 
 
-## Shards (魔晶) — the ENCHANT currency: crate drops + boss rewards. Cells
-## (above) stay the shop currency; shards feed the boss-room enchant pool.
+## Shards (魔晶) — the ENCHANT money: crate drops + boss rewards.
+## Coins (above) stay the shop money; shards feed the boss-room enchant pool.
 func add_shards(amount: int) -> void:
 	data["shards"] = int(data.get("shards", 0)) + amount
 

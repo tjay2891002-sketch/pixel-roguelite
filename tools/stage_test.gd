@@ -2,7 +2,7 @@ extends SceneTree
 ## Headless stage test: room lockdown lifecycle + treasure pickups.
 ##   A) entering a combat room locks it; leaving unlocks it; re-entering
 ##      locks again; killing all enemies unlocks permanently (cleared)
-##   B) walking into a treasure cell grants currency
+##   B) walking into a treasure coin grants coins
 ##   C) prop scatter: every prop has solid floor beneath (no floaters over
 ##      bottom-door pits) and lamps stay within their per-stage cap
 ## Run: godot --headless --path <project> --script res://tools/stage_test.gd
@@ -52,7 +52,7 @@ func _physics_process(_delta: float) -> bool:
 
 	match _frame:
 		3:
-			root.get_node("SaveStub").data.clear() # deterministic currency count
+			root.get_node("SaveStub").data.clear() # deterministic coin count
 			for room in _stage._rooms:
 				if room.role == 1 and not room.enemies.is_empty():
 					_combat_room = room
@@ -86,7 +86,7 @@ func _physics_process(_delta: float) -> bool:
 				_player.global_position = _pickup.global_position
 			elif _had_shop:
 				# fund the purchase, walk to the heal stand, press F to buy
-				root.get_node("SaveStub").data["currency"] = 15
+				root.get_node("SaveStub").data["coins"] = 15
 				_player.global_position = _heal_stand.global_position
 		50:
 			if not _had_pickup and _had_shop:
@@ -96,22 +96,22 @@ func _physics_process(_delta: float) -> bool:
 				_release(&"interact")
 		56:
 			if _had_pickup:
-				_check(int(root.get_node("SaveStub").data.get("currency", 0)) == 5,
-					"treasure cell grants 5 currency",
-					"currency=%s pickup_valid=%s dist=%.1f" % [
-						root.get_node("SaveStub").data.get("currency", -1),
+				_check(int(root.get_node("SaveStub").data.get("coins", 0)) == 5,
+					"treasure coin grants 5 coins",
+					"coins=%s pickup_valid=%s dist=%.1f" % [
+						root.get_node("SaveStub").data.get("coins", -1),
 						is_instance_valid(_pickup),
 						_player.global_position.distance_to(_pickup.global_position) if is_instance_valid(_pickup) else -1.0])
 			elif _had_shop:
-				_check(int(root.get_node("SaveStub").data.get("currency", -1)) == 5,
+				_check(int(root.get_node("SaveStub").data.get("coins", -1)) == 5,
 					"heal purchase deducts 10 (15->5)",
-					"currency=%s in_range=%s dist=%.1f" % [
-						root.get_node("SaveStub").data.get("currency", -1),
+					"coins=%s in_range=%s dist=%.1f" % [
+						root.get_node("SaveStub").data.get("coins", -1),
 						_heal_stand._in_range if is_instance_valid(_heal_stand) else "?",
 						_player.global_position.distance_to(_heal_stand.global_position) if is_instance_valid(_heal_stand) else -1.0])
 		57:
 			if not _had_pickup and _had_weapon:
-				root.get_node("SaveStub").data["currency"] = _weapon_stand.cost
+				root.get_node("SaveStub").data["coins"] = _weapon_stand.cost
 				_player.global_position = _weapon_stand.global_position
 		60:
 			if not _had_pickup and _had_weapon:
@@ -127,8 +127,8 @@ func _physics_process(_delta: float) -> bool:
 						_player.weapon.id,
 						_weapon_stand._in_range if is_instance_valid(_weapon_stand) else "?",
 						_player.global_position.distance_to(_weapon_stand.global_position) if is_instance_valid(_weapon_stand) else -1.0])
-				_check(int(root.get_node("SaveStub").data.get("currency", -1)) == 0,
-					"weapon purchase charges its cost", "currency=%s" % root.get_node("SaveStub").data.get("currency", -1))
+				_check(int(root.get_node("SaveStub").data.get("coins", -1)) == 0,
+					"weapon purchase charges its cost", "coins=%s" % root.get_node("SaveStub").data.get("coins", -1))
 		70:
 			# lethal damage -> death screen must appear (RunManager no longer
 			# auto-reloads; the stage owns the death flow)

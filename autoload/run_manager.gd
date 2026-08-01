@@ -82,5 +82,5 @@ func stage_rng(stage: int) -> RandomNumberGenerator:
 
 func _on_player_died() -> void:
 	# M5: the stage shows the death screen and reloads on input; we just
-	# persist the run's currency.
+	# persist the run's coins.
 	SaveStub.flush()

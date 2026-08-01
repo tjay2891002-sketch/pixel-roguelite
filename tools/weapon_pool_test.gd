@@ -1,6 +1,6 @@
 extends SceneTree
 ## Headless weapon-pool test:
-##   A) only the starter sword unlocked -> a weapon drop roll falls back to cells
+##   A) only the starter sword unlocked -> a weapon drop roll falls back to shards
 ##   B) unlocking dagger+axe puts them into the drop pool
 ##   C) shop weapon offer: interact buys -> unlocks (meta) + equips + charges
 ##   D) new weapon anims are registered (spear/greatsword/hammer)
@@ -31,7 +31,7 @@ func _initialize() -> void:
 func _physics_process(_delta: float) -> bool:
 	_frame += 1
 	match _frame:
-		# --- A: locked pool -> cells fallback
+		# --- A: locked pool -> shards fallback
 		2:
 			_save.data["unlocked_weapons"] = [&"sword"]
 			Drops.spawn(root.get_node("Playground"), &"weapon", Vector2(60, 120))
@@ -40,7 +40,7 @@ func _physics_process(_delta: float) -> bool:
 			for child in root.get_node("Playground").get_children():
 				if child is Area2D and child.get("kind") == &"weapon":
 					fell_back = false
-			_check(fell_back, "nothing unlocked to drop -> no weapon pickup (cells fallback)", "")
+			_check(fell_back, "nothing unlocked to drop -> no weapon pickup (shards fallback)", "")
 		# --- B: unlocked weapons enter the pool
 		7:
 			_save.data["unlocked_weapons"] = [&"sword", &"dagger", &"axe"]
@@ -57,7 +57,7 @@ func _physics_process(_delta: float) -> bool:
 				_check(_player.anim_player.has_animation(clip), "anim exists: %s" % clip, "")
 		# --- C: shop unlock purchase
 		14:
-			_save.data["currency"] = 30
+			_save.data["coins"] = 30
 			var stand_scene: PackedScene = load("res://level/shop_stand.tscn") # runtime: autoload ids inside
 			_stand = stand_scene.instantiate()
 			_stand.offer = &"weapon"
@@ -70,7 +70,7 @@ func _physics_process(_delta: float) -> bool:
 		23:
 			_check(_save.is_weapon_unlocked(&"spear"), "shop buy unlocks the spear (meta)", "")
 			_check(_player.weapon.id == &"spear", "shop buy equips the spear", "weapon=%s" % _player.weapon.id)
-			_check(int(_save.data["currency"]) == 10, "shop charges 20 of 30 cells", "cells=%d" % int(_save.data["currency"]))
+			_check(int(_save.data["coins"]) == 10, "shop charges 20 of 30 coins", "coins=%d" % int(_save.data["coins"]))
 			_check(not is_instance_valid(_stand), "stand is consumed", "")
 		# --- E: the bought spear swings for real
 		25:

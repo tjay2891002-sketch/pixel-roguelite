@@ -115,7 +115,7 @@ func _physics_process(_delta: float) -> bool:
 					if child.kind == &"shards":
 						shards += 1
 			_check(pickups >= 3, "boss drops a reward burst (weapon+potion+shards)", "pickups=%d" % pickups)
-			_check(shards >= 2, "boss reward pays SHARDS (enchant currency)", "shards=%d" % shards)
+			_check(shards >= 2, "boss reward pays SHARDS (enchant money)", "shards=%d" % shards)
 		# --- D: enchant pool (spend shards on the held weapon)
 		42:
 			_pool = get_first_node_in_group(&"enchant_pool")

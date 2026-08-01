@@ -16,8 +16,8 @@ const WEAPON_POOL := [
 ]
 
 ## [kind, weight] — potion payload is a fraction of max hp, resolved on spawn.
-## cells are NOT here on purpose: crate rolls pay SHARDS (the enchant
-## currency); cells come from treasure rooms and feed the shop.
+## coins are NOT here on purpose: crate rolls pay SHARDS (the enchant
+## money); coins come from treasure rooms and feed the shop.
 const TABLE := [
 	[&"weapon", 15],
 	[&"potion", 25],
@@ -39,7 +39,7 @@ static func roll_crate_drop(parent: Node, pos: Vector2) -> void:
 	for entry in TABLE:
 		total += entry[1]
 	var roll := _rng_float(parent) * total
-	var kind: StringName = &"cells"
+	var kind: StringName = &"shards"
 	for entry in TABLE:
 		roll -= entry[1]
 		if roll < 0.0:

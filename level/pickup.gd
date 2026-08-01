@@ -35,7 +35,7 @@ var _holding := false   # weapon: F currently held
 var _hold_t := 0.0
 
 
-func _init(p_kind: StringName = &"cells", p_payload = null) -> void:
+func _init(p_kind: StringName = &"shards", p_payload = null) -> void:
 	kind = p_kind
 	payload = p_payload
 
@@ -57,7 +57,7 @@ func _ready() -> void:
 		body_entered.connect(_on_body_entered)
 
 
-## Contact collection (cells / curse — the landmine).
+## Contact collection (shards / curse — the landmine).
 func _on_body_entered(body: Node2D) -> void:
 	if body.is_in_group(&"player"):
 		_collect(body)

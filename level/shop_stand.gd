@@ -34,8 +34,8 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _try_buy() -> void:
-	var cells := int(SaveStub.data.get("currency", 0))
-	if cells < cost:
+	var coins := int(SaveStub.data.get("coins", 0))
+	if coins < cost:
 		AudioBus.play_sfx(SFX.deny(), global_position)
 		return
 	var player := get_tree().get_first_node_in_group(&"player")
@@ -46,7 +46,7 @@ func _try_buy() -> void:
 		player.equip(weapon)
 	else:
 		return
-	SaveStub.data["currency"] = cells - cost
-	EventBus.currency_dropped.emit(-cost, global_position)
+	SaveStub.data["coins"] = coins - cost
+	EventBus.coin_dropped.emit(-cost, global_position)
 	AudioBus.play_sfx(SFX.pickup(), global_position)
 	queue_free()

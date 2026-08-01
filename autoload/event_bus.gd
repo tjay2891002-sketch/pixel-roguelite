@@ -17,9 +17,9 @@ signal room_cleared(room: Node2D)
 ## Emitted when the player's Health reaches zero. RunManager listens.
 signal player_died
 
-## Emitted when currency is dropped/collected. The meta-progression seam —
+## Emitted when coins are dropped/collected. The meta-progression seam —
 ## SaveStub accumulates; nothing else builds on this yet.
-signal currency_dropped(amount: int, world_position: Vector2)
+signal coin_dropped(amount: int, world_position: Vector2)
 
 ## Emitted by RunManager when the player levels up. Player (stats), stage
 ## (SFX/HUD) listen.
