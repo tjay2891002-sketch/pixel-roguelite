@@ -62,6 +62,7 @@ static func _try_generate(config: BiomeConfig, rng: RandomNumberGenerator) -> Ar
 	# 1. start chunk at the origin
 	var start_scene: PackedScene = _pick(config.start_chunks, rng)
 	var start_chunk: RoomChunk = start_scene.instantiate()
+	start_chunk.biome = config.tileset_biome # palette picked before any _build
 	start_chunk.analyze()
 	placements.append(_placement(start_scene, start_chunk, Vector2.ZERO, -1, null))
 
@@ -105,6 +106,7 @@ static func _attach(placements: Array, base: Dictionary, base_conn: RoomConnecto
 	for try in MAX_CANDIDATE_TRIES:
 		var cand_scene: PackedScene = _pick(pool, rng)
 		var cand: RoomChunk = cand_scene.instantiate()
+		cand.biome = config.tileset_biome
 		cand.analyze()
 		var matching := cand.connectors_for(-base_conn.dir)
 		if matching.is_empty():

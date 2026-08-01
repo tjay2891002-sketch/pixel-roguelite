@@ -6,6 +6,11 @@ extends Resource
 ## A TREASURE entry on the path may roll into SHOP at generation time.
 
 @export var id := &"greybox"
+## Palette/tileset variant (tileset_builder.TEXTURES key) — assigned to every
+## chunk at generation time, so chunk scenes stay biome-agnostic.
+@export var tileset_biome := &"greybox"
+## Optional per-biome enemy scene overrides: map letter (E/R/F/H) -> scene.
+@export var enemy_overrides: Dictionary = {}
 @export var path_roles: Array[int] = [0, 1, 1, 3, 1, 4]
 @export var start_chunks: Array[PackedScene] = []
 @export var combat_chunks: Array[PackedScene] = []

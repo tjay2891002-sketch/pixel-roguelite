@@ -10,7 +10,7 @@ extends Node2D
 ##   ^ v < >  door connector (TOP cell of a 3-tall floor-level door;
 ##            the two cells below must be open)
 ##   E  enemy spawn (random archetype)    R  spitter    F  flyer    H  heavy
-##   P  player start    T  treasure    B  boss door
+##   P  player start    T  treasure    B  boss door    S  spring (mushroom)
 ##
 ## Convention: chunks are fully walled rectangles; every door char sits on a
 ## border cell. Chunks connect door-to-door, so every jump inside a chunk is
@@ -57,7 +57,7 @@ func analyze() -> void:
 					connector.position = Vector2((x + 0.5) * TILE_SIZE, (y + 0.5) * TILE_SIZE)
 					add_child(connector) # safe on detached nodes; frees cascade
 					_connectors.append(connector)
-				"E", "R", "F", "H", "P", "T", "B":
+				"E", "R", "F", "H", "P", "T", "B", "S":
 					var kind := StringName(c)
 					if not _spawns.has(kind):
 						_spawns[kind] = []
@@ -106,7 +106,7 @@ func _build() -> void:
 		return
 	var layer := TileMapLayer.new()
 	layer.name = "TileMapLayer"
-	layer.tile_set = TILES.build()
+	layer.tile_set = TILES.build(biome) # per-biome palette (set by the generator)
 	# tiles sit behind actors
 	layer.z_index = -1
 	add_child(layer)

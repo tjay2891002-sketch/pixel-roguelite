@@ -6,6 +6,9 @@ extends Node2D
 const PlayerScene := preload("res://actors/player/player.tscn")
 const Generator := preload("res://level/generator/stage_generator.gd")
 const GreyboxBiome := preload("res://data/biomes/greybox.tres")
+const CaveBiome := preload("res://data/biomes/cave.tres")
+## Biomes cycled by stage_index (town, cave, town, cave…).
+const BIOME_CONFIGS := [GreyboxBiome, CaveBiome]
 const SFX := preload("res://fx/sfx_builder.gd")
 const ShopStand := preload("res://level/shop_stand.tscn")
 const Drops := preload("res://level/drops.gd")
@@ -15,6 +18,7 @@ const BossDoor := preload("res://level/boss_door.gd")
 const CoinTex := preload("res://assets/ui/coin.png")
 const GameFont := preload("res://fx/game_font.gd")
 const TileBuilder := preload("res://level/tileset_builder.gd")
+const Spring := preload("res://level/spring.gd")
 ## Boss rotation: cycled by stage_index so every stage's fight differs.
 const BOSS_SCENES := [
 	preload("res://actors/enemies/boss.tscn"),          # Gatekeeper (melee + volleys)
@@ -76,6 +80,7 @@ var _rng: RandomNumberGenerator
 var _status_sig := "" # status-row rebuild gate: only on change
 var _boss = null # the boss whose bar is showing (freed after the kill)
 var _lamps_used := 0  # per-stage lamp budget (reset in _build_stage)
+var _config: BiomeConfig # the stage's biome (tiles + enemy overrides)
 
 @onready var _debug_label: Label = $HUD/DebugLabel
 @onready var _hp_fill: TextureRect = $HUD/HpBarFill
@@ -184,12 +189,13 @@ func _build_stage() -> void:
 	_boss_bar.visible = false
 	_lamps_used = 0
 	_rng = RunManager.stage_rng(stage_index)
-	# difficulty curve: from stage 3, an extra combat room per stage before
-	# the boss room (duplicate + copy the array so the base config is untouched)
-	var config: BiomeConfig = GreyboxBiome
+	# biome cycles per stage; the difficulty curve grafts extra combat rooms
+	# from stage 3 (duplicate + copy the array so the config is untouched)
+	_config = BIOME_CONFIGS[stage_index % BIOME_CONFIGS.size()]
+	var config: BiomeConfig = _config
 	if stage_index >= 2:
-		config = GreyboxBiome.duplicate()
-		config.path_roles = GreyboxBiome.path_roles.duplicate()
+		config = _config.duplicate()
+		config.path_roles = _config.path_roles.duplicate()
 		for i in stage_index - 1:
 			config.path_roles.insert(config.path_roles.size() - 1, 1)
 	var layout := Generator.generate(config, _rng)
@@ -280,6 +286,7 @@ func _setup_room(pl: Dictionary, path_index: int) -> void:
 		_make_shop(pl)
 	elif pl.role in [3, 5]: # TREASURE / BRANCH
 		_make_treasure(pl)
+	_make_springs(pl)
 	_scatter_props(room, pl)
 
 
@@ -298,6 +305,8 @@ func _scatter_props(room: Dictionary, pl: Dictionary) -> void:
 	var avoid: Array = []
 	for m in pl.chunk.spawn_points(&"T"):
 		avoid.append(m.global_position.x)
+	for m in pl.chunk.spawn_points(&"S"):
+		avoid.append(m.global_position.x) # don't park a crate on the spring
 	var lines: PackedStringArray = pl.chunk.map.split("\n", false)
 	var floor_row := lines.size() - 1
 	for i in count:
@@ -325,6 +334,15 @@ func _scatter_props(room: Dictionary, pl: Dictionary) -> void:
 			sprite.z_index = -1
 			add_child(sprite)
 			sprite.position = Vector2(px, floor_top - tex.get_height() / 2.0)
+
+
+## Mushroom springs at S markers, feet on the floor line.
+func _make_springs(pl: Dictionary) -> void:
+	var floor_top: float = pl.pos.y + (pl.chunk.cell_size().y - 1) * TILE
+	for marker in pl.chunk.spawn_points(&"S"):
+		var spring: Area2D = Spring.new()
+		add_child(spring)
+		spring.global_position = Vector2(marker.global_position.x, floor_top)
 
 
 ## Weighted prop pick. The street lamp is rare and only allowed in big
@@ -390,7 +408,9 @@ func _pick_affordable(budget: int) -> StringName:
 
 
 func _spawn_enemy(room: Dictionary, kind: StringName, pos: Vector2) -> void:
-	var enemy = ENEMY_SCENES[kind].instantiate()
+	# biome override: the same letter can map to a different creature (cave E = slug)
+	var scene: PackedScene = _config.enemy_overrides.get(kind, ENEMY_SCENES[kind])
+	var enemy = scene.instantiate()
 	add_child(enemy)
 	# lift off the marker: markers can sit a pixel inside platforms
 	enemy.global_position = pos + Vector2(0, -12)
@@ -633,11 +653,17 @@ func _update_pause_text() -> void:
 
 
 ## Two-layer parallax town backdrop behind the chunks (replaces the void).
+## Cave biome tints it into a cold grotto cast.
 func _setup_background() -> void:
 	var bg := ParallaxBackground.new()
 	add_child(bg)
 	bg.add_child(_make_bg_layer(preload("res://assets/level/bg_far.png"), 0.2))
 	bg.add_child(_make_bg_layer(preload("res://assets/level/bg_mid.png"), 0.5))
+	var biome: BiomeConfig = BIOME_CONFIGS[stage_index % BIOME_CONFIGS.size()]
+	if biome.id == &"cave":
+		for layer in bg.get_children():
+			for sprite in layer.get_children():
+				sprite.modulate = Color(0.45, 0.6, 0.65)
 
 
 func _make_bg_layer(tex: Texture2D, scale: float) -> ParallaxLayer:

@@ -42,10 +42,10 @@ A 2D pixel-art roguelite action-platformer (Dead Cells-like) in **Godot 4.7.1 / 
 | ✅ | Boss 战 | Gatekeeper：进房锁门+大血条，半血狂暴（提速+弹幕交替），击破后开门进下一层 |
 | ✅ | Boss 轮换 + 击杀奖励 | 素材库 set3/4 启用：女巫 HEXCASTER（远程弹幕）+ 红帽 STREET STRAY（快速近战），按层轮换；击杀掉武器+药瓶+魔晶奖励雨 |
 | ✅ | 附魔系统 | 魔晶（箱子/boss 奖励的特殊货币）在 boss 房附魔池给武器强化（+12%/级，上限5）；大门挪到 boss 房右墙 |
+| ✅ | P2 弹簧机关 | 蘑菇弹簧（S 标记进 ASCII 地图）：坠落踩上高弹（>双跳）+ 刷新空中跳，boing 动画+音效 |
+| ✅ | P2 biome 变体 | 洞穴 biome：换色瓦片集 + 史莱姆（Poo Goo 素材）替换老鼠 + 冷色调背景；奇偶层轮换城镇/洞穴，验证生成器通用性 |
 | ✅ | 连续性 | 记忆文件 + 本文档 |
 
-| 📋 P2 | Sunny Land 弹簧机关 | mushroom-spring 素材已备，做弹跳平台 |
-| 📋 P2 | biome 变体 | 第二个 BiomeConfig（新 tileset + 新敌人组合），验证生成器通用性 |
 | 📋 P3 | meta 进度 UI | SaveStub 已埋点；永久解锁界面（Delve-bound 才有意义，先 fun） |
 | 📋 P3 | 更高音质战斗音 | freesound 原版 wav 需登录；当前用预览流 lq 版 |
 
