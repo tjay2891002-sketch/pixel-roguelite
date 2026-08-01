@@ -570,12 +570,13 @@ func _apply_camera_bounds(rect: Rect2) -> void:
 
 func _set_room_locked(room: Dictionary, locked: bool) -> void:
 	room.locked = locked
-	# the boss bar rides the fight's lock state
+	# the boss bar rides the fight's lock state — hide on ANY unlock (stepping
+	# out mid-fight unlocks without clearing; re-entering re-locks + re-shows)
 	if room.role == 4:
 		if locked:
 			_boss = room.boss
 			_boss_bar.visible = true
-		elif room.cleared:
+		else:
 			_boss_bar.visible = false
 			_boss = null
 	for blocker in room.blockers:

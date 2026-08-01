@@ -34,7 +34,7 @@ func _physics_process(_delta: float) -> bool:
 				_boss = room.boss
 
 	match _frame:
-		# --- A: boss presence + sealed door
+		# --- A: boss presence + sealed door + bar follows lock state
 		4:
 			_check(_boss_room != null, "found the boss room", "")
 			_check(_boss != null, "boss spawned into the room", "")
@@ -45,17 +45,28 @@ func _physics_process(_delta: float) -> bool:
 			_check(_boss_room.locked, "entering the boss room locks it", "")
 			_check(_stage._boss_bar.visible, "boss bar shows during the fight", "")
 			_stage._on_boss_door_entered(null, _boss_room)
-		12:
+		11:
 			_check(_stage.stage_index == 0, "door denies advance while the boss lives", "")
+			# step OUT mid-fight: the room unlocks and the bar must hide
+			# (regression: it stayed on, even into the next stage)
+			_player.global_position = _boss_room.bounds.position + Vector2(-64, 32)
+		15:
+			_check(not _boss_room.locked, "stepping out unlocks the fight", "")
+			_check(not _stage._boss_bar.visible, "bar hides when the fight disengages", "")
+			# back in: re-locks, bar returns
+			_player.global_position = _boss_room.bounds.get_center()
+		19:
+			_check(_boss_room.locked, "re-entering re-locks", "")
+			_check(_stage._boss_bar.visible, "bar returns on re-lock", "")
 		# --- B: enrage at half hp
-		14:
+		21:
 			_check(_boss.move_speed == 16.0, "phase 1 speed baseline", "speed=%.1f" % _boss.move_speed)
 			_check(_boss.attack_state == &"Attack", "phase 1 is melee", "state=%s" % _boss.attack_state)
 			_check(_boss.aim_mode == &"shot" and _boss.volley_count == 3,
 				"boss volley config: aim line + 3-ball spread", "")
 			_boss.health.take_hit({&"damage": 61, &"poise_damage": 0.0,
 				&"knockback": Vector2.ZERO, &"attacker": _player})
-		18:
+		25:
 			_check(_boss.health.hp == 59, "boss took the 61 hit (120->59)", "hp=%d" % _boss.health.hp)
 			_check(_boss.move_speed > 16.0, "enrage: faster", "speed=%.1f" % _boss.move_speed)
 			_check(_boss.visual.modulate != Color.WHITE, "enrage: red tint", "")
@@ -64,18 +75,19 @@ func _physics_process(_delta: float) -> bool:
 			_boss.emit_state(&"Chase")
 			_check(_boss.attack_state == &"Attack", "enrage alternates: melee next", "state=%s" % _boss.attack_state)
 		# --- C: kill -> cleared, xp, open door
-		30: # well past the 0.15s hit grace from f14 (hitstop stretches ticks)
+		37: # well past the 0.15s hit grace from f21 (hitstop stretches ticks)
 			_boss.health.take_hit({&"damage": 999, &"poise_damage": 0.0,
 				&"knockback": Vector2.ZERO, &"attacker": _player})
-		34:
+		41:
 			_check(_boss_room.cleared, "boss kill clears the room", "")
 			_check(not _stage._boss_bar.visible, "boss bar hides on clear", "")
 			_check(_boss_room.boss_flags.is_empty() or _boss_room.boss_flags[0].color == Color("ffd54a"),
 				"door flag turns gold", "")
 			_check(root.get_node("RunManager").level == 3, "boss xp 40 levels 1->3 (15/25)", "level=%d" % root.get_node("RunManager").level)
 			_stage._on_boss_door_entered(null, _boss_room)
-		40:
+		47:
 			_check(_stage.stage_index == 1, "cleared door advances the stage", "stage_index=%d" % _stage.stage_index)
+			_check(not _stage._boss_bar.visible, "bar stays hidden on the next stage", "")
 			_finish()
 	return false
 

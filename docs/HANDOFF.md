@@ -77,6 +77,7 @@ A 2D pixel-art roguelite action-platformer (Dead Cells-like) in **Godot 4.7.1 / 
 - `SaveStub.flush()` AND `load_data()` are headless no-ops: tests never touch the real user://save.json, and a late `load_data` replacing `data` mid-test can't wipe test state (stage_test treasure flake).
 - `obj.get("x") or default` is a BOOL op in GDScript (`40 or 0` → `true` → `int(true)` = 1 — the boss paid 1 xp instead of 40). Use `v if v != null else default`.
 - Children are ready BEFORE the parent: a child component can't read the parent's `@onready` vars in its own `_ready` — `get_node()` directly (boss_brain reads Health this way).
+- The boss bar hides on ANY boss-room unlock, not just on clear — stepping out mid-fight unlocks-without-clearing, and a clear-only hide left the bar stuck on into the next stage (user report).
 
 ## Conventions / decisions
 
