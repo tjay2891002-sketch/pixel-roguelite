@@ -46,6 +46,7 @@ A 2D pixel-art roguelite action-platformer (Dead Cells-like) in **Godot 4.7.1 / 
 | ✅ | P2 biome 变体 | 洞穴 biome：换色瓦片集 + 史莱姆（Poo Goo 素材）替换老鼠 + 冷色调背景；奇偶层轮换城镇/洞穴，验证生成器通用性 |
 | ✅ | P3 meta 进度 UI | 死亡结算面板：带回金币数 + 永久解锁列表（数字键 1-5 购买，SaveStub 持久化）；标题页有提示 |
 | ✅ | P3 高音质战斗音 | Kenney Impact Sounds (CC0)：打击=金属重击 002，击杀=金属重击 001；挥击保留三段拆分 |
+| ✅ | 房间布局扩充 | 战斗房 3→8：高台/双平台/深坑/窄巷/阶梯（combat_d~h，注册进城镇+洞穴两个 biome 池） |
 | ✅ | 连续性 | 记忆文件 + 本文档 |
 
 
