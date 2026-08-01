@@ -20,7 +20,8 @@ var _in_range := false
 
 func _ready() -> void:
 	add_to_group(&"shop_stand")
-	$Cost.text = "%dc" % cost
+	$Cost.text = "%d" % cost
+	$Cost.add_theme_color_override(&"font_color", Color("ffd54a")) # gold = coin price
 	$Icon.texture = IconPotion if offer == &"heal" else IconDagger
 	body_entered.connect(func(_b): _in_range = true)
 	body_exited.connect(func(_b): _in_range = false)

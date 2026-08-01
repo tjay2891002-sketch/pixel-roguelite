@@ -654,7 +654,7 @@ func _on_player_died() -> void:
 ## PERMANENT weapon unlocks. Hotkeys 1..N map to the pool minus the starter.
 func _update_death_text() -> void:
 	var cells := int(SaveStub.data.get("currency", 0))
-	var lines: Array[String] = ["你死了", "", "带回细胞: %d" % cells, "", "永久解锁（细胞不会因死亡丢失）:"]
+	var lines: Array[String] = ["你死了", "", "带回金币: %d" % cells, "", "永久解锁（金币不会因死亡丢失）:"]
 	for i in range(Drops.WEAPON_POOL.size()):
 		var entry: Dictionary = Drops.WEAPON_POOL[i]
 		var w: WeaponData = entry[&"data"]
@@ -663,9 +663,9 @@ func _update_death_text() -> void:
 		elif SaveStub.is_weapon_unlocked(w.id):
 			lines.append("  [%d] %s —— 已解锁 ✓" % [i, w.display_name])
 		elif cells >= int(entry[&"cost"]):
-			lines.append("  [%d] %s —— %d 细胞" % [i, w.display_name, int(entry[&"cost"])])
+			lines.append("  [%d] %s —— %d 金币" % [i, w.display_name, int(entry[&"cost"])])
 		else:
-			lines.append("  [%d] %s —— %d 细胞（不足）" % [i, w.display_name, int(entry[&"cost"])])
+			lines.append("  [%d] %s —— %d 金币（不足）" % [i, w.display_name, int(entry[&"cost"])])
 	lines.append("")
 	lines.append("[R] 重开")
 	_death_text.text = "\n".join(lines)
