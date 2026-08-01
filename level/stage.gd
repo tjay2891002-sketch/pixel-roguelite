@@ -34,6 +34,16 @@ const BREAKABLE_PROPS := [
 	preload("res://assets/level/tiles/prop_barrel.png"),
 	preload("res://assets/level/tiles/prop_crate.png"),
 ]
+# Weighted scatter: lamps read as spam at the old flat 25% rate, so they're
+# rare (1/8), only appear in big combat/boss rooms, and cap per stage.
+const LAMP_TEX := preload("res://assets/level/tiles/prop_street-lamp.png")
+const PROP_WEIGHTS := [ # [texture, weight]
+	[preload("res://assets/level/tiles/prop_barrel.png"), 3],
+	[preload("res://assets/level/tiles/prop_crate.png"), 3],
+	[preload("res://assets/level/tiles/prop_sign.png"), 2],
+	[preload("res://assets/level/tiles/prop_street-lamp.png"), 1],
+]
+const LAMP_STAGE_CAP := 2
 
 const TILE := 16
 const KEY_R := 82
@@ -65,6 +75,7 @@ var _state_name := "Idle"
 var _rng: RandomNumberGenerator
 var _status_sig := "" # status-row rebuild gate: only on change
 var _boss = null # the boss whose bar is showing (freed after the kill)
+var _lamps_used := 0  # per-stage lamp budget (reset in _build_stage)
 
 @onready var _debug_label: Label = $HUD/DebugLabel
 @onready var _hp_fill: TextureRect = $HUD/HpBarFill
@@ -171,6 +182,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func _build_stage() -> void:
 	_boss = null
 	_boss_bar.visible = false
+	_lamps_used = 0
 	_rng = RunManager.stage_rng(stage_index)
 	# difficulty curve: from stage 3, an extra combat room per stage before
 	# the boss room (duplicate + copy the array so the base config is untouched)
@@ -275,8 +287,9 @@ func _setup_room(pl: Dictionary, path_index: int) -> void:
 ## the floor. Breakables become DestructibleProps (solid to the player, blast
 ## enemies when smashed); decor stays visual-only at z=-1 — same layer as the
 ## tiles, so actors (z 0) always draw on top and it can't block the view.
-## Spots overlapping a T marker are SKIPPED: a solid crate on a shop stand
-## or treasure cell shoves the player out of interaction range (test flake).
+## Skips: spots near T markers (a solid crate there shoves the player out of
+## interaction range) and spots WITHOUT a solid floor cell below (a bottom-
+## door pit would leave the prop floating).
 func _scatter_props(room: Dictionary, pl: Dictionary) -> void:
 	var floor_top: float = pl.pos.y + (pl.chunk.cell_size().y - 1) * TILE
 	var w: float = pl.chunk.bounds().size.x
@@ -285,8 +298,10 @@ func _scatter_props(room: Dictionary, pl: Dictionary) -> void:
 	var avoid: Array = []
 	for m in pl.chunk.spawn_points(&"T"):
 		avoid.append(m.global_position.x)
+	var lines: PackedStringArray = pl.chunk.map.split("\n", false)
+	var floor_row := lines.size() - 1
 	for i in count:
-		var tex: Texture2D = PROPS[_rng.randi() % PROPS.size()]
+		var tex: Texture2D = _roll_prop_tex(room.role)
 		var span := maxf(0.0, w - margin * 2.0)
 		var px: float = pl.pos.x + margin + _rng.randf() * span
 		var blocked := false
@@ -295,6 +310,10 @@ func _scatter_props(room: Dictionary, pl: Dictionary) -> void:
 				blocked = true
 				break
 		if blocked:
+			continue
+		# ground check: the floor cell under px must be solid map rock
+		var cell_x := int(floorf((px - pl.pos.x) / TILE))
+		if cell_x < 0 or cell_x >= lines[floor_row].length() or lines[floor_row][cell_x] != "#":
 			continue
 		if BREAKABLE_PROPS.has(tex):
 			var prop := DestructibleProp.new(tex)
@@ -306,6 +325,27 @@ func _scatter_props(room: Dictionary, pl: Dictionary) -> void:
 			sprite.z_index = -1
 			add_child(sprite)
 			sprite.position = Vector2(px, floor_top - tex.get_height() / 2.0)
+
+
+## Weighted prop pick. The street lamp is rare and only allowed in big
+## combat/boss rooms, capped per stage — it dominated at the old flat rate.
+func _roll_prop_tex(role: int) -> Texture2D:
+	var lamp_ok: bool = role in [1, 4] and _lamps_used < LAMP_STAGE_CAP
+	var total := 0
+	for e in PROP_WEIGHTS:
+		if e[0] == LAMP_TEX and not lamp_ok:
+			continue
+		total += e[1]
+	var roll := _rng.randi() % total
+	for e in PROP_WEIGHTS:
+		if e[0] == LAMP_TEX and not lamp_ok:
+			continue
+		roll -= e[1]
+		if roll < 0:
+			if e[0] == LAMP_TEX:
+				_lamps_used += 1
+			return e[0]
+	return PROP_WEIGHTS[0][0]
 
 
 ## The boss: rotated through the pool by stage_index. It joins

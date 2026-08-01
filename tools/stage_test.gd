@@ -3,7 +3,17 @@ extends SceneTree
 ##   A) entering a combat room locks it; leaving unlocks it; re-entering
 ##      locks again; killing all enemies unlocks permanently (cleared)
 ##   B) walking into a treasure cell grants currency
+##   C) prop scatter: every prop has solid floor beneath (no floaters over
+##      bottom-door pits) and lamps stay within their per-stage cap
 ## Run: godot --headless --path <project> --script res://tools/stage_test.gd
+
+const LAMP_TEX := preload("res://assets/level/tiles/prop_street-lamp.png")
+const PROP_TEXES := [
+	preload("res://assets/level/tiles/prop_barrel.png"),
+	preload("res://assets/level/tiles/prop_crate.png"),
+	preload("res://assets/level/tiles/prop_sign.png"),
+	preload("res://assets/level/tiles/prop_street-lamp.png"),
+]
 
 var _frame := 0
 var _stage
@@ -54,6 +64,8 @@ func _physics_process(_delta: float) -> bool:
 			_had_weapon = _weapon_stand != null
 			if _combat_room:
 				_player.global_position = _combat_room.bounds.get_center()
+		4:
+			_check_prop_scatter()
 		15:
 			_check(_blockers_enabled(), "room locks on player entry", "")
 			# step back out: leaving must unlock the room
@@ -127,6 +139,34 @@ func _physics_process(_delta: float) -> bool:
 			_check(_stage.get_node("DeathOverlay").visible, "death overlay appears on death", "")
 			_finish()
 	return false
+
+
+func _check_prop_scatter() -> void:
+	var lamps := 0
+	var floaters := 0
+	for child in _stage.get_children():
+		var feet = null
+		var tex = null
+		if child is Sprite2D and PROP_TEXES.has(child.texture):
+			tex = child.texture
+			# decor sprites are center-anchored; props are foot-anchored
+			feet = child.global_position + Vector2(0, tex.get_height() / 2.0)
+		elif child is StaticBody2D and child.get("broken") != null:
+			feet = child.global_position # DestructibleProp origin = feet
+		if feet == null:
+			continue
+		if tex == LAMP_TEX:
+			lamps += 1
+		for room in _stage._rooms:
+			if room.bounds.has_point(feet):
+				var lines: PackedStringArray = room.chunk.map.split("\n", false)
+				var row: String = lines[lines.size() - 1]
+				var cx := int(floorf((feet.x - room.bounds.position.x) / 16.0))
+				if cx < 0 or cx >= row.length() or row[cx] != "#":
+					floaters += 1
+				break
+	_check(lamps <= 2, "lamps capped per stage", "lamps=%d" % lamps)
+	_check(floaters == 0, "every prop has solid floor beneath", "floaters=%d" % floaters)
 
 
 func _blockers_enabled() -> bool:
